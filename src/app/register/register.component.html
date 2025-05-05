@@ -1,0 +1,29 @@
+
+<!-- src/app/register/register.component.html -->
+<section class="register-section">
+    <div class="register-container">
+      <div class="register-card">
+        <div class="register-card-body">
+          <h2 class="register-title">Create an Account</h2>
+  
+          <div class="input-group">
+            <input type="email" id="registerEmail" class="register-input" placeholder="Email" [(ngModel)]="email" />
+          </div>
+  
+          <div class="input-group">
+            <input type="password" id="registerPassword" class="register-input" placeholder="Password" [(ngModel)]="password" />
+          </div>
+  
+          <button type="button" class="register-button" (click)="register()">Register</button>
+  
+          <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+  
+          <p class="login-link">
+            Already have an account?
+            <a href="/login">Login</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  

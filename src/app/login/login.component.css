@@ -1,0 +1,130 @@
+/* Sección principal: centra vertical y horizontalmente */
+.login-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f2f5;
+}
+
+/* Contenedor del login con ancho máximo definido y centrado */
+.login-container {
+  width: 100%;
+  max-width: 350px;
+  padding: 20px;
+  margin: 0 auto;
+}
+
+/* Tarjeta de login con fondo blanco, bordes redondeados y sombra sutil */
+.login-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 30px 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Título centrado y con un tamaño de fuente destacado */
+.login-title {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Grupo de inputs, alineados a la izquierda para los campos del formulario */
+.input-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+/* Estilo para los campos de entrada */
+.login-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Botones más compactos y con ancho automático para no ocupar toda la línea */
+.login-button,
+.login-button-google {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  width: auto;  
+}
+
+/* Botón de login tradicional */
+.login-button {
+  background-color: #007bff;
+}
+
+/* Botón de login con Google: se usa flex para centrar la imagen y el texto */
+.login-button-google {
+  background-color: #dd4b39;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  
+}
+
+/* Imagen dentro del botón de Google */
+.login-button-google img {
+  height: 20px;
+  filter: drop-shadow(1px 1px 2px rgb(48, 47, 47));
+  
+}
+
+/* Enlace "Olvidé mi contraseña" alineado a la derecha */
+.forgot-password {
+  text-align: center;
+  margin: 10px 0 15px;
+}
+
+/* Estilo para el enlace de "Olvidé mi contraseña" */
+.forgot-password-link {
+  color: #007bff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Mensaje de error: fondo rojo muy claro, texto rojo */
+.error-message {
+  background-color: #ffe5e5;
+  color: #ff0000;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Mensaje de información: fondo verde muy claro, texto verde oscuro */
+.info-message {
+  background-color: #e5ffe5;
+  color: #008000;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Texto para el enlace de registro centrado */
+.signup-text {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Enlace de registro */
+.signup-link {
+  color: #007bff;
+  text-decoration: none;
+  cursor: pointer;
+}
