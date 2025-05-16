@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { NavbarComponent } from "../navbar/navbar.component";
 
 @Component({
   selector: 'app-main-menu',
@@ -10,7 +11,7 @@ import { Component } from '@angular/core';
       <!-- Más componentes o enlaces se pueden ir cargando aquí en el futuro -->
     </div>
   `,
-  imports: [],
+  imports: [NavbarComponent],
   templateUrl: './main-menu.component.html',
   styleUrl: './main-menu.component.css'
 })
