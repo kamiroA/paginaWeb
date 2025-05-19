@@ -1,0 +1,42 @@
+<div class="dashboard-container">
+  <!-- Sección Superior: Your Calendar -->
+  <div class="calendar-section">
+    <h2>Your Calendar</h2>
+    <div class="calendar-wrapper">
+      <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
+  </div>
+
+  <!-- Sección Inferior: Eventos en dos columnas -->
+  <div class="events-container">
+    <!-- Columna para "Your Events" -->
+    <div class="events-column">
+      <h3>Your Events</h3>
+      <div class="events-list">
+        <div class="event-card" *ngFor="let event of yourEvents">
+          <div class="event-header">
+            <span class="event-title">{{ event.title }}</span>
+            <span class="event-role">{{ event.role }}</span>
+          </div>
+          <p class="event-description">{{ event.description }}</p>
+          <small class="event-date">{{ event.date | date:'short' }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna para "Joined Events" -->
+    <div class="events-column">
+      <h3>Joined Events</h3>
+      <div class="events-list">
+        <div class="event-card" *ngFor="let event of joinedEvents">
+          <div class="event-header">
+            <span class="event-title">{{ event.title }}</span>
+            <button class="leave-button" (click)="leaveEvent(event)">Leave</button>
+          </div>
+          <p class="event-description">{{ event.description }}</p>
+          <small class="event-date">{{ event.date | date:'short' }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

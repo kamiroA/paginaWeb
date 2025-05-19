@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>Create Event</h2>
+<mat-dialog-content>
+  <form [formGroup]="eventForm">
+    <mat-form-field appearance="fill" style="width: 100%;">
+      <mat-label>Código</mat-label>
+      <input matInput formControlName="codigo">
+      <mat-error *ngIf="eventForm.get('codigo')?.hasError('required')">
+        Código es obligatorio.
+      </mat-error>
+    </mat-form-field>
+    
+    <mat-form-field appearance="fill" style="width: 100%;">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="descripcion"></textarea>
+      <mat-error *ngIf="eventForm.get('descripcion')?.hasError('required')">
+        Descripción es obligatoria.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" style="width: 100%;">
+      <mat-label>Hora Inicio</mat-label>
+      <input matInput type="datetime-local" formControlName="horaInicio">
+      <mat-error *ngIf="eventForm.get('horaInicio')?.hasError('required')">
+        Hora de inicio es obligatoria.
+      </mat-error>
+    </mat-form-field>
+    
+    <mat-form-field appearance="fill" style="width: 100%;">
+      <mat-label>Hora Fin</mat-label>
+      <input matInput type="datetime-local" formControlName="horaFin">
+      <mat-error *ngIf="eventForm.get('horaFin')?.hasError('required')">
+        Hora de fin es obligatoria.
+      </mat-error>
+      <mat-error *ngIf="eventForm.errors?.['dateMismatch']">
+        La hora de inicio debe ser anterior a la hora de fin.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Se muestra el selector de horas disponibles solo si existen slots calculados -->
+    <mat-form-field *ngIf="availableSlots.length > 0" appearance="fill" style="width: 100%;">
+      <mat-label>Horas Disponibles</mat-label>
+      <mat-select formControlName="horasDisponibles" multiple>
+        <mat-option *ngFor="let slot of availableSlots" [value]="slot">
+          {{ slot | date:'shortTime' }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button color="primary" (click)="onSubmit()">Create</button>
+</mat-dialog-actions>

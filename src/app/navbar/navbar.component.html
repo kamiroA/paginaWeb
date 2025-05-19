@@ -1,12 +1,12 @@
-
 <mat-toolbar color="primary">
   <div class="left-section">
-   <img class="logo" src="logo.png" alt="Logo">
+    <img class="logo" src="logo.png" alt="Logo">
     <span class="logo-text">PlanPal</span>
   </div>
   <div class="right-section">
-    <button mat-button class="create-event-button">Create Event</button>
-    <mat-form-field appearance="outline"  class="search-field">
+    <!-- Se le agrega el (click) para abrir el diálogo -->
+    <button mat-button class="create-event-button" (click)="openCreateEventDialog()">Create Event</button>
+    <mat-form-field appearance="outline" class="search-field">
       <mat-icon matPrefix>search</mat-icon>
       <mat-label class="search-field-hint">Search events</mat-label>
       <input matInput>

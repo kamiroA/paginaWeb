@@ -10,6 +10,7 @@ mat-toolbar {
 
   padding: 50px 70px;
   box-shadow: 0 4px 10px #20202080;
+  margin-bottom: 60px;
 }
 
 /* ---------------------- */
@@ -157,8 +158,7 @@ mat-toolbar {
 mat-menu {
   border-radius: 20px;
   background-color: #ffffff;  /* Blanco sólido */
-  opacity: 1;                 /* Forzamos opacidad completa */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra para dar profundidad */
+
 }
 
 mat-menu .mat-menu-content {
@@ -171,5 +171,8 @@ mat-menu .mat-menu-content {
 .mat-menu-item {
   text-align: center;
   width: 100%;
+}
+.mat-menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* Fondo al pasar el mouse */
 }
 
