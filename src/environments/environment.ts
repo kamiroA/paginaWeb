@@ -5,5 +5,7 @@ export const environment  = {
   projectId: "proyectofinalciclo-a1049",
   storageBucket: "proyectofinalciclo-a1049.firebasestorage.app",
   messagingSenderId: "1098068681851",
-  appId: "1:1098068681851:web:c4c408eed9ba361eb82ede"
+  appId: "1:1098068681851:web:c4c408eed9ba361eb82ede",
+
+   apiBaseUrl: 'http://localhost:8080'
 };

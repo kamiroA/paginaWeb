@@ -1,24 +1,28 @@
+<!-- src/app/navbar/navbar.component.html -->
 <mat-toolbar color="primary">
   <div class="left-section">
     <img class="logo" src="logo.png" alt="Logo">
     <span class="logo-text">PlanPal</span>
   </div>
   <div class="right-section">
-    <!-- Se le agrega el (click) para abrir el diálogo -->
-    <button mat-button class="create-event-button" (click)="openCreateEventDialog()">Create Event</button>
+    <button mat-button class="create-event-button" (click)="openCreateEventDialog()">
+      Create Event
+    </button>
     <mat-form-field appearance="outline" class="search-field">
       <mat-icon matPrefix>search</mat-icon>
       <mat-label class="search-field-hint">Search events</mat-label>
       <input matInput>
     </mat-form-field>
     <span class="spacer"></span>
+    <!-- Actualizamos el botón de perfil para usar la imagen y el nombre de usuario -->
     <button class="profileButton" mat-icon-button [matMenuTriggerFor]="profileMenu">
-      <mat-icon class="profilebuttonIcon">account_circle</mat-icon>
-      <span>Mike</span>
+      <!-- Usamos una etiqueta <img> para mostrar la foto de perfil -->
+      <img class="profilebuttonIcon" [src]="profileImage" alt="Perfil" />
+      <span>{{ userName }}</span>
       <mat-icon>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #profileMenu="matMenu">
-      <button mat-menu-item>Editar Perfil</button>
+       <button mat-menu-item (click)="openEditProfileDialog()">Editar Perfil</button>
     </mat-menu>
   </div>
 </mat-toolbar>

@@ -25,23 +25,24 @@ import { ReactiveFormsModule } from '@angular/forms';
 })
 export class CreateEventDialogComponent {
   eventForm: FormGroup;
-  availableSlots: string[] = [];
+  availableSlots: string[] = []; // Slots calculados entre horaInicio y horaFin
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<CreateEventDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    // Se crea el formulario con los campos requeridos.
+    // Creamos el formulario con los campos que coinciden con el objeto Evento.
     this.eventForm = this.fb.group({
       codigo: ['', Validators.required],
       descripcion: ['', Validators.required],
       horaInicio: ['', Validators.required],
       horaFin: ['', Validators.required],
-      horasDisponibles: [[]]  // Se inicializa como array vacío
+      // El campo de horasDisponibles se rellena desde el mat-select; se inicia como array vacío.
+      horasDisponibles: [[]]
     }, { validators: this.checkDates });
 
-    // Cada vez que cambie la hora de inicio o fin, se recalculan los slots disponibles.
+    // Cuando cambie la hora de inicio o fin, se recalculan los slots disponibles.
     this.eventForm.get('horaInicio')?.valueChanges.subscribe(() => this.updateAvailableSlots());
     this.eventForm.get('horaFin')?.valueChanges.subscribe(() => this.updateAvailableSlots());
   }
@@ -61,8 +62,8 @@ export class CreateEventDialogComponent {
   }
 
   /**
-   * Calcula los horarios disponibles (slots) entre la hora de inicio y la hora fin,
-   * usando un intervalo de 30 minutos.
+   * Calcula los slots disponibles entre la hora de inicio y hora fin utilizando un intervalo de 30 minutos.
+   * Estos slots se presentarán en el selector para que el usuario elija las horas disponibles.
    */
   updateAvailableSlots(): void {
     const inicio = this.eventForm.get('horaInicio')?.value;
@@ -71,9 +72,8 @@ export class CreateEventDialogComponent {
       const startDate = new Date(inicio);
       const endDate = new Date(fin);
       const slots: string[] = [];
-      const stepMinutes = 30; // Intervalo en minutos
+      const stepMinutes = 30; // Intervalo de 30 minutos
       let current = new Date(startDate);
-      // Mientras no se alcance la hora de fin, se agregan los slots
       while (current < endDate) {
         slots.push(current.toISOString());
         current.setMinutes(current.getMinutes() + stepMinutes);
@@ -90,16 +90,17 @@ export class CreateEventDialogComponent {
 
   onSubmit(): void {
     if (this.eventForm.valid) {
-      // Se preparan los datos para enviar al API.
+      // Se obtiene la información del formulario.
       let formValue = this.eventForm.value;
-      // Si no se han seleccionado horas disponibles, se deja como un array vacío.
+      // Si no se han seleccionado horas disponibles, se asegura que sean un array vacío.
       if (!formValue.horasDisponibles) {
         formValue.horasDisponibles = [];
       }
-      // Se establece citasReservadas como un mapa vacío.
+      // Se establece el campo citasReservadas como un objeto vacío.
       formValue.citasReservadas = {};
-      // (Opcional) Puedes asignar aquí el creadorId según el usuario actual.
-      formValue.creadorId = '';
+      // Opcionalmente, asigna el creadorId (por ejemplo, del usuario autenticado). Si no lo tienes, puede dejarse vacío.
+      formValue.creadorId = ''; // Puedes cambiarlo según la lógica de tu aplicación.
+      // Enviar el objeto adaptado, que coincide con la definición del modelo Evento.
       this.dialogRef.close(formValue);
     }
   }

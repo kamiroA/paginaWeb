@@ -147,9 +147,12 @@ mat-toolbar {
   background-color: rgba(0, 0, 0, 0.2);
 }
 .profilebuttonIcon {
-  font-size: 26px;
-  margin-right: 5px;
-  
+  width: 40px;         /* Ajusta el tamaño horizontal */
+  height: 40px;        /* Ajusta el tamaño vertical */
+  object-fit: cover;   /* Para que la imagen se recorte manteniendo su proporción */
+  border-radius: 50%; 
+  margin-right: 10px;
+  border: 2px solid #ffffff; /* Borde blanco */
 }
 
 /* ---------------------- */
@@ -175,4 +178,6 @@ mat-menu .mat-menu-content {
 .mat-menu-item:hover {
   background-color: rgba(0, 0, 0, 0.1); /* Fondo al pasar el mouse */
 }
+
+
 

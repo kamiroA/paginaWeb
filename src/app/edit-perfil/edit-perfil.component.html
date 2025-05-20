@@ -1,0 +1,69 @@
+<div class="edit-profile-container">
+  <!-- Panel izquierdo: Foto y datos visibles -->
+  <div class="left-panel">
+    <div class="profile-pic-wrapper">
+      <img [src]="profileImage || 'DefaultPF.png'" alt="Profile Picture" class="profile-pic"/>
+      <label for="upload-photo" class="edit-icon">
+         <input type="file" id="upload-photo" hidden (change)="uploadFile($event)" />
+        <span class="camera-icon">+</span>
+      </label>
+    </div>
+    <p class="user-name">{{ name }}</p>
+
+    <div class="user-info">
+      <p><strong>Email:</strong> {{ email }}</p>
+      <p><strong>Additional Info:</strong> {{ info }}</p>
+    </div>
+  </div>
+
+  <!-- Panel derecho: Campos editables -->
+  <div class="right-panel">
+    <div class="editable-field">
+      <label>Name</label>
+      <input type="text" [readonly]="!editName" [(ngModel)]="name" />
+      <button (click)="toggleEdit('name')">{{ editName ? 'Guardar' : 'Editar' }}</button>
+    </div>
+
+    <div class="editable-field">
+      <label>Email</label>
+      <input type="email" [readonly]="!editEmail" [(ngModel)]="email" />
+      <button (click)="toggleEdit('email')">{{ editEmail ? 'Guardar' : 'Editar' }}</button>
+    </div>
+
+    <div class="editable-field">
+      <label>Additional Info</label>
+      <textarea [readonly]="!editInfo" [(ngModel)]="info"></textarea>
+      <button (click)="toggleEdit('info')">{{ editInfo ? 'Guardar' : 'Editar' }}</button>
+    </div>
+
+    <div class="change-password-section">
+      <button type="button" (click)="togglePasswordFields()" class="change-password-btn">
+        Change Password
+      </button>
+
+      <div class="password-fields" *ngIf="showPasswordFields">
+        <div class="editable-field">
+          <label>Current Password</label>
+          <input type="password" [(ngModel)]="oldPassword" />
+        </div>
+        <div class="editable-field">
+          <label>New Password</label>
+          <input type="password" [(ngModel)]="newPassword" />
+        </div>
+        <div class="editable-field">
+          <label>Confirm New Password</label>
+          <input type="password" [(ngModel)]="confirmPassword" />
+        </div>
+
+        <button
+          type="button"
+          class="save-password-btn"
+          [disabled]="!isPasswordValid()"
+          (click)="savePassword()"
+        >
+          Guardar Contraseña
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,123 @@
+
+.edit-profile-container {
+  display: flex;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 1000px;
+  margin: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: Arial, sans-serif;
+}
+
+.left-panel {
+  width: 35%;
+  text-align: center;
+  padding-right: 20px;
+  border-right: 1px solid #ddd;
+}
+
+.profile-pic-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-pic {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #007bff;
+  color: white;
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.user-info {
+  margin-top: 15px;
+  text-align: left;
+  padding: 0 10px;
+}
+
+.right-panel {
+  width: 65%;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.editable-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editable-field input,
+.editable-field textarea {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.editable-field textarea {
+  resize: vertical;
+  height: 60px;
+}
+
+.editable-field button {
+  padding: 6px 10px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.change-password-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  max-width: 200px;
+
+}
+.change-password-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.change-password-toggle {
+  margin-top: 10px;
+  margin-left: 60px;
+
+}
+
+.change-password-toggle a {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.password-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
