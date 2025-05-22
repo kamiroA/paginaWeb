@@ -1,21 +1,16 @@
-/* ---------------------- */
 /* Estilos generales del navbar */
-/* ---------------------- */
 mat-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #ffffff;  /* Fondo oscuro */
-  max-width: inherit;
-
-  padding: 50px 70px;
+  background-color: #ffffff;
+  padding: 20px 30px;
   box-shadow: 0 4px 10px #20202080;
   margin-bottom: 60px;
+  height: auto;
 }
 
-/* ---------------------- */
 /* Sección izquierda: Logo y texto */
-/* ---------------------- */
 .left-section {
   display: flex;
   align-items: center;
@@ -32,23 +27,30 @@ mat-toolbar {
   margin-right: 20px;
 }
 
-/* ---------------------- */
-/* Sección derecha: Botones y campo de búsqueda */
-/* ---------------------- */
-.right-section {
+/* Sección centro: Botones y campo de búsqueda */
+.center-section {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex: 1; /* ocupa el espacio intermedio */
 }
-
-/* Botón "Create Event" */
+.busqueda-button {
+  background-color: #2196F3;
+  color: #000;
+  border: none;
+  border-radius: 100px;
+  padding: 10px 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 .create-event-button {
-  margin-right: 20px;
-  background-color: #2196F3;  /* Azul brillante */
+  margin: 0 20px;
+  background-color: #2196F3;
   color: #fff;
   border: none;
   border-radius: 9px;
   padding: 10px 20px;
-  
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -59,86 +61,70 @@ mat-toolbar {
 .create-event-button:active {
   background-color: #0d47a1;
 }
-
-/* Campo de búsqueda (simulado como botón) */
 .search-field {
-  max-width: 220px;
-  height: 30px;             
-  border-radius: 18px;       
-  padding: 0 12px;           
+  width: 300px;
+  height: 30px;
+  border-radius: 25px;
+  padding: 0 20px;
   display: flex;
-  margin-top: auto;
-  align-items: center;      
-  justify-content: center;  
+  align-items: center;
+  justify-content: center;
   background-color: #ffffff;
   color: #000;
   margin-right: 15px;
   cursor: pointer;
+  margin-top: 20px;
 }
-
-/* Si se aplica un outline por la apariencia del form-field, igualamos su border-radius */
 .search-field .mat-form-field-outline,
 .search-field .mat-form-field-outline-start,
 .search-field .mat-form-field-outline-gap,
 .search-field .mat-form-field-outline-end {
   border-radius: 18px;
 }
-
-/* Asegura que el contenedor interno se centre correctamente */
 .search-field .mat-form-field-infix {
   display: flex;
   align-items: center;
 }
-
-/* Estilo del ícono */
 .search-field .mat-icon {
   font-size: 20px;
-  margin-right: 5px;
   color: #000;
   display: flex;
   align-items: center;
 }
-
-/* Estilo del input */
 .search-field .mat-input-element {
-  font-size: 14px;
+  font-size: 10px;
   border: none;
   outline: none;
   background: transparent;
   width: 100%;
-  text-align: left;
-  line-height: 36px;  /* Para que el texto se alinee verticalmente en un contenedor de 36px */
-  margin: 0;
+  
+  line-height: 36px;
+  margin-left: 10px;
   padding: 0;
 }
-
-/* Si se muestra el label (opcional) */
 .search-field .mat-form-field-label {
   font-size: 12px;
   line-height: 36px;
 }
 
-
-
-
-
-/* ---------------------- */
-/* Botón de perfil */
-/* ---------------------- */
+/* Sección derecha: Botón de perfil */
+.right-section {
+  display: flex;
+  align-items: center;
+}
 .profileButton {
   display: flex;
   align-items: center;
   background-color: transparent;
-  color: #000000;
+  color: #000;
   border: 1px solid rgba(0, 0, 0, 0.5);
   border-radius: 20px;
-  padding: 12px 25px;  /* Aumenta el padding para agrandar el botón */
-  min-height: 50px;    /* Opcional: establece una altura mínima */
+  padding: 12px 25px;
+  min-height: 50px;
   cursor: pointer;
   transition: background-color 0.3s, border-color 0.3s;
-  font-size: 28px;     /* Aumenta el tamaño de fuente, si lo deseas */
+  font-size: 28px;
 }
-
 .profileButton:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: #1f1f1f;
@@ -147,37 +133,29 @@ mat-toolbar {
   background-color: rgba(0, 0, 0, 0.2);
 }
 .profilebuttonIcon {
-  width: 40px;         /* Ajusta el tamaño horizontal */
-  height: 40px;        /* Ajusta el tamaño vertical */
-  object-fit: cover;   /* Para que la imagen se recorte manteniendo su proporción */
-  border-radius: 50%; 
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
   margin-right: 10px;
-  border: 2px solid #ffffff; /* Borde blanco */
+  border: 2px solid #ffffff;
 }
 
-/* ---------------------- */
-/* Submenú del perfil */
-/* ---------------------- */
 mat-menu {
   border-radius: 20px;
-  background-color: #ffffff;  /* Blanco sólido */
-
+  background-color: #ffffff;
 }
-
 mat-menu .mat-menu-content {
   display: flex;
-  flex-direction: column;  /* Ubica los elementos en columna */
-  justify-content: center; /* Centra verticalmente */
-  align-items: center;     /* Centra horizontalmente */
-  padding: 12px;           /* Espaciado interno */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
 }
 .mat-menu-item {
   text-align: center;
   width: 100%;
 }
 .mat-menu-item:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Fondo al pasar el mouse */
+  background-color: rgba(0, 0, 0, 0.1);
 }
-
-
-

@@ -5,8 +5,8 @@ import { RegisterComponent } from './register/register.component';
 import { MainMenuComponent } from './main-menu/main-menu.component';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  { path: '', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'menu', component: MainMenuComponent },
-  { path: '', redirectTo: '/login', pathMatch: 'full' }
+  
 ];

@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Unirse al Evento</h2>
+<mat-dialog-content>
+  <p><strong>Nombre:</strong> {{ data.event.codigo }}</p>
+  <p><strong>Descripción:</strong> {{ data.event.descripcion }}</p>
+  <p><strong>Inicio:</strong> {{ data.event.horaInicio | date:'short' }}</p>
+  <p><strong>Fin:</strong> {{ data.event.horaFin | date:'short' }}</p>
+  
+  <!-- Selector de horas disponibles -->
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Selecciona una hora disponible</mat-label>
+    <mat-select [formControl]="horaControl">
+      <mat-option *ngFor="let hora of availableHours" [value]="hora">
+        {{ hora | date:'shortTime' }}
+      </mat-option>
+    </mat-select>
+    <mat-error *ngIf="horaControl.hasError('required')">
+      Selecciona una hora
+    </mat-error>
+  </mat-form-field>
+
+  <!-- Sección para mostrar las citas reservadas (junto al nombre del usuario que reservó) -->
+  <div *ngIf="reservedAppointments && reservedAppointments.length > 0" style="margin-top: 16px;">
+    <h3>Reservas existentes:</h3>
+    <ul>
+      <li  *ngFor="let reserva of reservedAppointments">
+        {{ reserva.hora | date:'shortTime' }} - Reservado por: {{ reserva.reservadoPor }}
+    </li>
+
+    </ul>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-button [disabled]="horaControl.invalid" (click)="joinEvent()">Unirse al Evento</button>
+</mat-dialog-actions>

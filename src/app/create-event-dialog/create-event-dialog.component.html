@@ -3,7 +3,7 @@
   <form [formGroup]="eventForm">
     <!-- Campo: Código -->
     <mat-form-field appearance="fill" style="width: 100%;">
-      <mat-label>Código</mat-label>
+      <mat-label>Evento</mat-label>
       <input matInput formControlName="codigo">
       <mat-error *ngIf="eventForm.get('codigo')?.hasError('required')">
         Código es obligatorio.

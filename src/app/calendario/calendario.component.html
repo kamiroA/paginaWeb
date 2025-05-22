@@ -13,13 +13,14 @@
     <div class="events-column">
       <h3>Your Events</h3>
       <div class="events-list">
-        <div class="event-card" *ngFor="let event of yourEvents">
+        <div class="event-card" *ngFor="let event of yourEvents" (click)="openEventDetail(event)">
           <div class="event-header">
-            <span class="event-title">{{ event.title }}</span>
-            <span class="event-role">{{ event.role }}</span>
+            <span class="event-title">{{ event.codigo || event.title }}</span>
+           <span class="event-role">{{ event.creadorId === currentUserName ? 'Host' : '' }}</span>
+
           </div>
-          <p class="event-description">{{ event.description }}</p>
-          <small class="event-date">{{ event.date | date:'short' }}</small>
+          <p class="event-description">{{ event.descripcion }}</p>
+          <small class="event-date">{{ event.horaInicio | date:'short' }}</small>
         </div>
       </div>
     </div>
@@ -28,13 +29,13 @@
     <div class="events-column">
       <h3>Joined Events</h3>
       <div class="events-list">
-        <div class="event-card" *ngFor="let event of joinedEvents">
+        <div class="event-card" *ngFor="let event of joinedEvents" (click)="openEventDetail(event)">
           <div class="event-header">
-            <span class="event-title">{{ event.title }}</span>
-            <button class="leave-button" (click)="leaveEvent(event)">Leave</button>
+            <span class="event-title">{{ event.codigo || event.title }}</span>
+            <button class="leave-button" (click)="leaveEvent(event); $event.stopPropagation()">Leave</button>
           </div>
-          <p class="event-description">{{ event.description }}</p>
-          <small class="event-date">{{ event.date | date:'short' }}</small>
+          <p class="event-description">{{ event.descripcion }}</p>
+          <small class="event-date">{{ event.horaInicio | date:'short' }}</small>
         </div>
       </div>
     </div>

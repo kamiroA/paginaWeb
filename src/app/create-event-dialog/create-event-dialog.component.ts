@@ -89,19 +89,18 @@ export class CreateEventDialogComponent {
   }
 
   onSubmit(): void {
-    if (this.eventForm.valid) {
-      // Se obtiene la información del formulario.
-      let formValue = this.eventForm.value;
-      // Si no se han seleccionado horas disponibles, se asegura que sean un array vacío.
-      if (!formValue.horasDisponibles) {
-        formValue.horasDisponibles = [];
-      }
-      // Se establece el campo citasReservadas como un objeto vacío.
-      formValue.citasReservadas = {};
-      // Opcionalmente, asigna el creadorId (por ejemplo, del usuario autenticado). Si no lo tienes, puede dejarse vacío.
-      formValue.creadorId = ''; // Puedes cambiarlo según la lógica de tu aplicación.
-      // Enviar el objeto adaptado, que coincide con la definición del modelo Evento.
-      this.dialogRef.close(formValue);
+  if (this.eventForm.valid) {
+    // Se obtiene la información del formulario.
+    let formValue = this.eventForm.value;
+    if (!formValue.horasDisponibles) {
+      formValue.horasDisponibles = [];
     }
+    formValue.citasReservadas = {};
+    // Asigna el nombre del creador usando la propiedad pasada en los datos del diálogo.
+    formValue.creadorId = this.data.currentUserName; // Se guarda el nombre, no el ID.
+    this.dialogRef.close(formValue);
   }
+}
+
+
 }
