@@ -7,8 +7,8 @@ import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClient } from '@angular/common/http';
 import { ApiEndpointsService } from '../api-endpoints.service';
+import { forkJoin } from 'rxjs';
 
-// Se extiende la interfaz para incluir currentUser (nombre del usuario logueado)
 export interface JoinEventData {
   event: any;            // El evento debe incluir: id, codigo, descripcion, horaInicio, horaFin, horasDisponibles, citasReservadas, etc.
   currentUser?: string;  // Nombre del usuario logueado, por ejemplo "Camilo"
@@ -29,13 +29,10 @@ export interface JoinEventData {
   styleUrls: ['./join-event-dialog.component.css']
 })
 export class JoinEventDialogComponent implements OnInit {
-  // Control para seleccionar la hora, con validación requerida
-  horaControl = new FormControl('', Validators.required);
-
-  // Array que contendrá las horas disponibles filtradas (quitando las reservadas)
+  // Control de selección múltiple (aunque en la práctica se espere una sola hora)
+  horaControl = new FormControl<(string | null)[]>([], Validators.required);
   availableHours: string[] = [];
-
-  // Array con las reservas extraídas, donde cada reserva tendrá la hora y el nombre (del que reservó)
+  // Ahora se asume que en Firestore, citasReservadas es un mapa: clave = hora elegida, valor = nombre
   reservedAppointments: { hora: string, reservadoPor: string }[] = [];
 
   constructor(
@@ -45,69 +42,74 @@ export class JoinEventDialogComponent implements OnInit {
     private endpoints: ApiEndpointsService
   ) {}
 
- ngOnInit(): void {
-  let reservedHours: string[] = [];
-  if (this.data.event.citasReservadas) {
-    this.reservedAppointments = Object.values(this.data.event.citasReservadas)
-      .map((entry: any) => {
-        let hora: string = '';
-        let reservadoPor: string = '';
-        // Si la entrada es un objeto con la propiedad 'hora'
-        if (entry && typeof entry === 'object' && entry.hora) {
-          hora = entry.hora;
-          reservadoPor = entry.nombre || entry.reservadoPor || this.data.currentUser || 'Sin nombre';
-        }
-        // Si la entrada es un array, se verifica cuál de sus elementos es una fecha válida.
-        else if (Array.isArray(entry)) {
-          if (!isNaN(Date.parse(entry[0]))) {
-            hora = entry[0];
-            reservadoPor = entry[1] || this.data.currentUser || 'Sin nombre';
-          } else if (!isNaN(Date.parse(entry[1]))) {
-            hora = entry[1];
-            reservadoPor = entry[0] || this.data.currentUser || 'Sin nombre';
-          }
-        }
-        // Si la entrada es una cadena, se verifica que sea una fecha válida.
-        else if (typeof entry === 'string') {
-          if (!isNaN(Date.parse(entry))) {
-            hora = entry;
-            reservadoPor = this.data.currentUser || 'Sin nombre';
-          } else {
-            // Si no es una fecha válida, devolver null para descartarla.
-            return null;
-          }
-        }
-        return { hora, reservadoPor };
-      })
-      .filter(reservation => reservation !== null);
-    reservedHours = this.reservedAppointments.map(r => r.hora);
+  ngOnInit(): void {
+    let reservedHours: string[] = [];
+    if (this.data.event.citasReservadas) {
+      // Mapeamos el mapa con Object.entries para obtener un array de objetos { hora, reservadoPor }
+      this.reservedAppointments = Object.entries(this.data.event.citasReservadas)
+        .map(([hora, valor]) => {
+          return { hora, reservadoPor: (valor as string) || 'Sin nombre' };
+        });
+      reservedHours = Object.keys(this.data.event.citasReservadas);
+    }
+    // Calcula las horas disponibles quitando las ya reservadas.
+    this.availableHours = this.data.event.horasDisponibles.filter((hora: string) => {
+      return !reservedHours.includes(hora);
+    });
   }
 
-  // Filtra las horas disponibles quitando las que ya están reservadas
-  this.availableHours = this.data.event.horasDisponibles.filter((hora: string) => {
-    return !reservedHours.includes(hora);
-  });
-}
-
-
-  // Cierra el diálogo sin acción
   onCancel(): void {
     this.dialogRef.close();
   }
 
-  // Envía la solicitud para reservar la hora seleccionada, incluyendo el nombre del usuario logueado
   joinEvent(): void {
-    const selectedHora = this.horaControl.value;
-    const url = this.endpoints.reservarCitaEndpoint(this.data.event.id);
-    // El payload incluye "hora" y "reservadoPor" (nombre del usuario logueado)
-    const payload = {
-      hora: selectedHora,
-      reservadoPor: this.data.currentUser || 'Sin nombre'
-    };
-    this.http.patch(url, payload, { responseType: 'text' }).subscribe({
+    let selectedHoras = this.horaControl.value;
+    // Asegurarse de que selectedHoras sea siempre un arreglo (incluso si se selecciona solo una hora)
+    if (!Array.isArray(selectedHoras)) {
+      selectedHoras = [selectedHoras];
+    }
+    if (!selectedHoras || !selectedHoras.length) {
+      alert("Por favor selecciona al menos una hora.");
+      return;
+    }
+    // Se enviará una petición PATCH por cada hora seleccionada.
+    const requests = selectedHoras.map((hora: string | null) => {
+      if (!hora) {
+        throw new Error('Hora seleccionada es null o indefinida');
+      }
+      const eventId = this.data.event.id; // Se asume que el objeto evento tiene la propiedad 'id'
+      if (!eventId) {
+        throw new Error('ID del evento no definido');
+      }
+      const url = this.endpoints.reservarCitaEndpoint(eventId);
+      // Envía el payload directo, es decir, el objeto { [hora]: currentUser }
+      const payload = {
+        [hora]: this.data.currentUser || 'Sin nombre'
+      };
+      return this.http.patch(url, payload, { responseType: 'text' });
+    });
+    forkJoin(requests).subscribe({
       next: () => {
-        alert('Te has unido al evento exitosamente.');
-        this.dialogRef.close(true);
+        // Luego de las peticiones, se actualiza el evento mediante un GET
+        const eventId = this.data.event.id;
+        if (!eventId) {
+          alert("No se encontró el ID del evento.");
+          return;
+        }
+        const getUrl = this.endpoints.getEventoByIdEndpoint(eventId);
+        this.http.get<any>(getUrl).subscribe({
+          next: updatedEvent => {
+            this.data.event = updatedEvent;
+            // Recalcula las horas disponibles (actualizando reservedAppointments y availableHours)
+            this.ngOnInit();
+            alert('Te has unido al evento exitosamente.');
+            this.dialogRef.close(true);
+          },
+          error: err => {
+            alert('Error al actualizar la información del evento: ' + err.message);
+            this.dialogRef.close(true);
+          }
+        });
       },
       error: (err) => {
         alert('Error al unirse al evento: ' + err.message);
