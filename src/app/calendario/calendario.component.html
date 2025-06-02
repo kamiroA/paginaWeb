@@ -1,5 +1,5 @@
 <div class="dashboard-container">
-  <!-- Sección Superior: Your Calendar -->
+  <!-- Sección del Calendario -->
   <div class="calendar-section">
     <h2>Your Calendar</h2>
     <div class="calendar-wrapper">
@@ -7,17 +7,27 @@
     </div>
   </div>
 
-  <!-- Sección Inferior: Eventos en dos columnas -->
+  <!-- Listas de Eventos -->
   <div class="events-container">
-    <!-- Columna para "Your Events" -->
+    <!-- Columna de Tus Eventos -->
     <div class="events-column">
       <h3>Your Events</h3>
       <div class="events-list">
-        <div class="event-card" *ngFor="let event of yourEvents" (click)="openEventDetail(event)">
+        <div class="event-card" *ngFor="let event of yourEvents" (click)="editEvent(event)">
           <div class="event-header">
             <span class="event-title">{{ event.codigo || event.title }}</span>
-           <span class="event-role">{{ event.creadorId === currentUserName ? 'Host' : '' }}</span>
-
+            <div class="event-badges">
+              <ng-container *ngFor="let badge of event.badges">
+                <span class="event-badge"
+                      [ngClass]="{
+                        'host-badge': badge.type === 'host',
+                        'booked-badge': badge.type === 'booked',
+                        'etiqueta-badge': badge.type === 'etiqueta'
+                      }">
+                  {{ badge.label }}
+                </span>
+              </ng-container>
+            </div>
           </div>
           <p class="event-description">{{ event.descripcion }}</p>
           <small class="event-date">{{ event.horaInicio | date:'short' }}</small>
@@ -25,14 +35,25 @@
       </div>
     </div>
 
-    <!-- Columna para "Joined Events" -->
+    <!-- Columna de Eventos Reservados -->
     <div class="events-column">
-      <h3>Joined Events</h3>
+      <h3>Booked Events</h3>
       <div class="events-list">
-        <div class="event-card" *ngFor="let event of joinedEvents" (click)="openEventDetail(event)">
+        <div class="event-card" *ngFor="let event of bookedEvents" (click)="viewEvent(event)">
           <div class="event-header">
             <span class="event-title">{{ event.codigo || event.title }}</span>
-            <button class="leave-button" (click)="leaveEvent(event); $event.stopPropagation()">Leave</button>
+            <div class="event-badges">
+              <ng-container *ngFor="let badge of event.badges">
+                <span class="event-badge"
+                      [ngClass]="{
+                        'host-badge': badge.type === 'host',
+                        'booked-badge': badge.type === 'booked',
+                        'etiqueta-badge': badge.type === 'etiqueta'
+                      }">
+                  {{ badge.label }}
+                </span>
+              </ng-container>
+            </div>
           </div>
           <p class="event-description">{{ event.descripcion }}</p>
           <small class="event-date">{{ event.horaInicio | date:'short' }}</small>

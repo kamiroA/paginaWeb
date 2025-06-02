@@ -32,14 +32,15 @@ export class CreateEventDialogComponent {
     public dialogRef: MatDialogRef<CreateEventDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    // Creamos el formulario con los campos que coinciden con el objeto Evento.
+    // Creamos el formulario con los campos que coinciden con el objeto Evento,
+    // incluyendo el nuevo campo "etiqueta".
     this.eventForm = this.fb.group({
       codigo: ['', Validators.required],
       descripcion: ['', Validators.required],
       horaInicio: ['', Validators.required],
       horaFin: ['', Validators.required],
-      // El campo de horasDisponibles se rellena desde el mat-select; se inicia como array vacío.
-      horasDisponibles: [[]]
+      horasDisponibles: [[]],
+      etiqueta: ['', Validators.required]
     }, { validators: this.checkDates });
 
     // Cuando cambie la hora de inicio o fin, se recalculan los slots disponibles.
@@ -89,18 +90,16 @@ export class CreateEventDialogComponent {
   }
 
   onSubmit(): void {
-  if (this.eventForm.valid) {
-    // Se obtiene la información del formulario.
-    let formValue = this.eventForm.value;
-    if (!formValue.horasDisponibles) {
-      formValue.horasDisponibles = [];
+    if (this.eventForm.valid) {
+      // Se obtiene la información del formulario.
+      let formValue = this.eventForm.value;
+      if (!formValue.horasDisponibles) {
+        formValue.horasDisponibles = [];
+      }
+      formValue.citasReservadas = {};
+      // Asigna el nombre del creador usando la propiedad pasada en los datos del diálogo.
+      formValue.creadorId = this.data.currentUserName; // Se guarda el nombre, no el ID.
+      this.dialogRef.close(formValue);
     }
-    formValue.citasReservadas = {};
-    // Asigna el nombre del creador usando la propiedad pasada en los datos del diálogo.
-    formValue.creadorId = this.data.currentUserName; // Se guarda el nombre, no el ID.
-    this.dialogRef.close(formValue);
   }
-}
-
-
 }

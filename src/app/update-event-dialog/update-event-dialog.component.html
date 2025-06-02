@@ -1,7 +1,18 @@
-<h2 mat-dialog-title>Create Event</h2>
+<h2 mat-dialog-title>
+  {{ editMode ? 'Modificar Evento' : 'Detalles del Evento' }}
+</h2>
 <mat-dialog-content>
   <form [formGroup]="eventForm">
-    <!-- Campo: Código -->
+    <!-- Campo: ID del Evento con botón de copiar -->
+    <mat-form-field appearance="fill" style="width: 100%;">
+      <mat-label>ID del Evento</mat-label>
+      <input matInput [value]="data.id" readonly>
+      <button mat-icon-button matSuffix (click)="copyId(data.id)">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Campo: Código/Título del Evento -->
     <mat-form-field appearance="fill" style="width: 100%;">
       <mat-label>Evento</mat-label>
       <input matInput formControlName="codigo">
@@ -40,7 +51,7 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Nuevo Campo: Etiqueta -->
+    <!-- Campo: Etiqueta -->
     <mat-form-field appearance="fill" style="width: 100%;">
       <mat-label>Etiqueta</mat-label>
       <mat-select formControlName="etiqueta">
@@ -54,8 +65,8 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Campo: Horas Disponibles -->
-    <mat-form-field *ngIf="availableSlots.length > 0" appearance="fill" style="width: 100%;">
+    <!-- Campo: Horas Disponibles (modo edición) -->
+    <mat-form-field *ngIf="!data.readOnly && availableSlots.length > 0" appearance="fill" style="width: 100%;">
       <mat-label>Horas Disponibles</mat-label>
       <mat-select formControlName="horasDisponibles" multiple>
         <mat-option *ngFor="let slot of availableSlots" [value]="slot">
@@ -63,9 +74,31 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
+
+    <!-- Campo: Reserva del usuario (modo lectura) -->
+    <mat-form-field *ngIf="data.readOnly" appearance="fill" style="width: 100%;">
+      <mat-label>Tu Reserva</mat-label>
+      <input matInput [value]="data.reserva ? (data.reserva | date:'shortTime') : 'Sin reserva'" readonly>
+    </mat-form-field>
   </form>
 </mat-dialog-content>
+
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button color="primary" (click)="onSubmit()">Create</button>
+  <!-- Si el diálogo está en modo solo lectura, muestra solo "Cerrar" -->
+  <ng-container *ngIf="data.readOnly">
+    <button mat-button (click)="onClose()">Cerrar</button>
+  </ng-container>
+  <!-- Modo editable -->
+  <ng-container *ngIf="!data.readOnly">
+    <ng-container *ngIf="!editMode">
+      <button mat-button (click)="onEnableEdit()">Modificar</button>
+      <button mat-button color="warn" (click)="onDelete()">Eliminar</button>
+      <button mat-button (click)="onClose()">Cerrar</button>
+    </ng-container>
+    <ng-container *ngIf="editMode">
+      <button mat-button (click)="onCancelEdit()">Cancelar Edición</button>
+      <button mat-button color="warn" (click)="onDelete()">Eliminar</button>
+      <button mat-button color="primary" (click)="onSubmit()">Actualizar</button>
+    </ng-container>
+  </ng-container>
 </mat-dialog-actions>

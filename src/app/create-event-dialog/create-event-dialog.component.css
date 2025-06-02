@@ -1,4 +1,83 @@
-/* Espaciado entre campos */
+/* Estilos generales para el contenedor del diálogo */
+:host {
+  display: block;
+  margin: 0 auto;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 8px;
+  animation: scaleIn 0.3s ease-in-out;
+}
+
+/* Animación de entrada para dar dinamismo */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Estilos para el título del diálogo */
+h2[mat-dialog-title] {
+  font-size: 24px;
+  font-weight: 600;
+  color: #3f51b5;
+  margin-bottom: 16px;
+}
+
+/* Configuración de los form fields para ocupar todo el ancho y tener separación */
 mat-form-field {
-  margin-bottom: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Ajusta el contenido del diálogo para que no se desborde en pantallas pequeñas */
+mat-dialog-content {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  padding-right: 8px; /* Evita que el contenido se "corte" por el scrollbar */
+  box-sizing: border-box;
+}
+
+/* 
+  Estiliza el panel desplegable del mat-select:
+  - Se fuerza la apertura hacia abajo mediante transform-origin.
+  - Se limita la altura y se activa el scroll interno para que no se desborde.
+*/
+.mat-select-panel {
+  transform-origin: top center !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  background-color: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  box-shadow: 0px 3px 7px rgba(0, 0, 0, 0.2);
+}
+
+/* Efecto dinámico al pasar el mouse sobre las opciones del select */
+.mat-option:hover {
+  background-color: rgba(63, 81, 181, 0.1) !important;
+}
+
+/* Estiliza el contenedor de acciones del diálogo, separándolo visualmente */
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 0 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 16px;
+}
+
+/* Ajustes responsivos para pantallas más pequeñas */
+@media (max-width: 600px) {
+  :host {
+    padding: 16px;
+    max-width: 90%;
+  }
 }
