@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, NgZone } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -34,21 +34,20 @@ import { Firestore, doc, docData } from '@angular/fire/firestore';
   styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent implements OnInit {
-  // Propiedades para los datos del usuario
+  // Datos del usuario
   userName: string = 'Usuario';
   profileImage: string = 'DefaultPF.png';
   isLogged: boolean = false;
-
   // ID del usuario actual (cuando está logueado)
   currentUid: string = '';
-
   // Variable para búsqueda de evento
   eventQuery: string = '';
 
-  // Servicios inyectados
+  // Servicios inyectados usando el mecanismo inject()
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private router: Router = inject(Router);
+  private ngZone: NgZone = inject(NgZone);
 
   constructor(
     private dialog: MatDialog,
@@ -58,51 +57,57 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit(): void {
     onAuthStateChanged(this.auth, (user) => {
-      if (user) {
-        this.isLogged = true;
-        this.currentUid = user.uid;
-        const userDocRef = doc(this.firestore, "usuarios", user.uid);
-        docData(userDocRef, { idField: 'id' }).subscribe((data: any) => {
-          this.userName = data?.name || user.displayName || 'Usuario';
-          this.profileImage = data?.fotoPerfil || 'DefaultPF.png';
-        });
-      } else {
-        this.isLogged = false;
+      // Forzar la ejecución de este callback dentro de la zona de Angular
+      this.ngZone.run(() => {
+        if (user) {
+          this.isLogged = true;
+          this.currentUid = user.uid;
+          const userDocRef = doc(this.firestore, "usuarios", user.uid);
+          // La suscripción se envuelve en NgZone para asegurar la detección de cambios
+          docData(userDocRef, { idField: 'id' }).subscribe((data: any) => {
+            this.ngZone.run(() => {
+              this.userName = data?.name || user.displayName || 'Usuario';
+              this.profileImage = data?.fotoPerfil || 'DefaultPF.png';
+            });
+          });
+        } else {
+          this.ngZone.run(() => {
+            this.isLogged = false;
+          });
+        }
+      });
+    });
+  }
+
+  openCreateEventDialog(): void {
+    const dialogRef = this.dialog.open(CreateEventDialogComponent, {
+      width: '50vw',
+      minWidth: '600px',
+      maxWidth: '90vw',
+      height: '70vh',
+      minHeight: '400px',
+      data: { currentUserName: this.userName }  // Enviamos el nombre del usuario
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createEvent(result);
       }
     });
   }
 
- openCreateEventDialog(): void {
-  const dialogRef = this.dialog.open(CreateEventDialogComponent, {
-    width: '50vw',
-    minWidth: '600px',
-    maxWidth: '90vw',
-    height: '70vh',
-    minHeight: '400px',
-    data: { currentUserName: this.userName }  // Enviamos el nombre del usuario
-  });
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      this.createEvent(result);
-    }
-  });
-}
-
-
   createEvent(eventData: any): void {
-  // Se supone que ya se ha asignado el nombre del creador en el diálogo,
-  // por lo que no sobrescribimos el valor.
-  this.http.post(this.endpoints.eventosEndpoint, eventData, { responseType: 'text' })
-    .subscribe({
-      next: (response: string) => {
-        console.log('Evento creado:', response);
-      },
-      error: err => {
-        console.error('Error creando evento:', err);
-      }
-    });
-}
-
+    // Se envía el evento al endpoint correspondiente
+    this.http
+      .post(this.endpoints.eventosEndpoint, eventData, { responseType: 'text' })
+      .subscribe({
+        next: (response: string) => {
+          console.log('Evento creado:', response);
+        },
+        error: err => {
+          console.error('Error creando evento:', err);
+        }
+      });
+  }
 
   openEditProfileDialog(): void {
     if (!this.isLogged) {
@@ -130,10 +135,13 @@ export class NavbarComponent implements OnInit {
   logout(): void {
     signOut(this.auth)
       .then(() => {
-        this.isLogged = false;
-        this.userName = 'Usuario';
-        this.profileImage = 'DefaultPF.png';
-        this.router.navigate(['/login']);
+        // Forzamos la actualización dentro de la zona de Angular
+        this.ngZone.run(() => {
+          this.isLogged = false;
+          this.userName = 'Usuario';
+          this.profileImage = 'DefaultPF.png';
+          this.router.navigate(['/login']);
+        });
       })
       .catch((error) => {
         console.error("Error al cerrar sesión:", error);

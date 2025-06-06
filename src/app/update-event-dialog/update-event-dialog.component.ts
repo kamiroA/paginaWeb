@@ -47,7 +47,8 @@ export class UpdateEventDialogComponent implements OnInit {
       horaFin: [{ value: '', disabled: true }, Validators.required],
       horasDisponibles: [{ value: [], disabled: true }],
       etiqueta: [{ value: '', disabled: true }, Validators.required],
-      creadorId: [{ value: '', disabled: true }]
+      creadorId: [{ value: '', disabled: true }],
+      reserva: [{ value: null, disabled: true }]
     }, { validators: this.checkDates });
   }
 
@@ -60,36 +61,43 @@ export class UpdateEventDialogComponent implements OnInit {
     }
   }
 
- getEventById(): void {
-  const eventId = this.data.id;
-  this.http.get<any>(this.apiEndpoints.getEventoByIdEndpoint(eventId)).subscribe(
-    data => {
-      const fetchedData = {
-        id: data.id,
-        codigo: data.codigo || data.title || '',
-        descripcion: data.descripcion || '',
-        // Convertir la fecha al formato "yyyy-MM-ddTHH:mm"
-        horaInicio: data.horaInicio ? this.formatDateForInput(data.horaInicio) : '',
-        horaFin: data.horaFin ? this.formatDateForInput(data.horaFin) : '',
-        // Si se tiene una propiedad "reserva", se asigna; de lo contrario, se queda como null o vacío.
-        reserva: data.reserva || null,
-        horasDisponibles: data.horasDisponibles || [],
-        etiqueta: data.etiqueta || '',
-        creadorId: data.creadorId || ''
-      };
-      this.eventForm.patchValue(fetchedData);
-    },
-    error => {
-      console.error('Error al obtener el evento por id', error);
+  /**
+   * Procesa el campo de reserva:
+   * - Si es un Firestore Timestamp (con propiedad seconds), lo convierte a Date.
+   * - Si es un objeto (por ejemplo, un mapa con reservas), itera sobre sus entradas y para cada par
+   *   extrae la hora (formateada) y el nombre, devolviendo una cadena del estilo "08:30 - Nombre".
+   * - En otros casos, lo devuelve tal como está.
+   */
+  private parseReserva(value: any): any {
+    if (!value) return null;
+    if (typeof value === 'object') {
+      if ('seconds' in value) {
+        return new Date(value.seconds * 1000);
+      }
+      // Se asume que es un mapa. Por ejemplo: { "2025-06-03T08:30:00.000Z": "Camilo Armando Maita" }
+      let resultArr: string[] = [];
+      for (const [timeStr, name] of Object.entries(value)) {
+        const date = new Date(timeStr);
+        let formattedTime: string;
+        if (isNaN(date.getTime())) {
+          formattedTime = timeStr; // En caso de que no se convierta
+        } else {
+          formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        resultArr.push(`${formattedTime} - ${name}`);
+      }
+      return resultArr.join(', ');
     }
-  );
-}
+    return value;
+  }
 
-
-  // Convierte una fecha (ISO o Firestore Timestamp) al formato "yyyy-MM-ddTHH:mm"
+  /**
+   * Convierte un valor de fecha (Firestore Timestamp o string) al formato "yyyy-MM-ddTHH:mm"
+   * para inputs de tipo datetime-local.
+   */
   private formatDateForInput(dateValue: any): string {
     let date: Date;
-    if (dateValue && typeof dateValue === 'object' && dateValue.seconds) {
+    if (typeof dateValue === 'object' && dateValue.seconds) {
       date = new Date(dateValue.seconds * 1000);
     } else {
       date = new Date(dateValue);
@@ -124,6 +132,30 @@ export class UpdateEventDialogComponent implements OnInit {
     } else {
       this.availableSlots = [];
     }
+  }
+
+  getEventById(): void {
+    const eventId = this.data.id;
+    this.http.get<any>(this.apiEndpoints.getEventoByIdEndpoint(eventId)).subscribe(
+      data => {
+        const reservaValue = this.parseReserva(data.reserva || data.citasReservadas);
+        const fetchedData = {
+          id: data.id,
+          codigo: data.codigo || data.title || '',
+          descripcion: data.descripcion || '',
+          horaInicio: data.horaInicio ? this.formatDateForInput(data.horaInicio) : '',
+          horaFin: data.horaFin ? this.formatDateForInput(data.horaFin) : '',
+          reserva: reservaValue,
+          horasDisponibles: data.horasDisponibles || [],
+          etiqueta: data.etiqueta || '',
+          creadorId: data.creadorId || ''
+        };
+        this.eventForm.patchValue(fetchedData);
+      },
+      error => {
+        console.error('Error al obtener el evento por id', error);
+      }
+    );
   }
 
   onEnableEdit(): void {
@@ -161,5 +193,17 @@ export class UpdateEventDialogComponent implements OnInit {
     navigator.clipboard.writeText(id)
       .then(() => console.log('ID copiado'))
       .catch(err => console.error('Error al copiar el ID', err));
+  }
+
+  // Propiedad computada para mostrar la reserva formateada.
+  // Si la reserva es un objeto Date, se formatea a hora; si ya es un string (con hora y nombre), se devuelve tal cual.
+  get reservaDisplay(): string {
+    const reserva = this.eventForm.get('reserva')?.value;
+    if (reserva instanceof Date) {
+      return reserva.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (typeof reserva === 'string' && reserva.trim().length > 0) {
+      return reserva;
+    }
+    return 'Sin reserva';
   }
 }

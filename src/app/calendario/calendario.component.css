@@ -3,8 +3,10 @@
 /* --------------------------- */
 .dashboard-container {
   max-width: 1400px;
+  height: auto;
   margin: 30px auto;
-  padding: 0 30px;
+  margin-bottom: auto;
+  padding: 0 30px 400px; 
   display: flex;
   flex-direction: column;
   gap: 40px;
@@ -30,6 +32,7 @@
   background-color: #fff;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: max-content;
 }
 
 .calendar-wrapper:hover {

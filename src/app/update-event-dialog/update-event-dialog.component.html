@@ -77,9 +77,9 @@
 
     <!-- Campo: Reserva del usuario (modo lectura) -->
     <mat-form-field *ngIf="data.readOnly" appearance="fill" style="width: 100%;">
-      <mat-label>Tu Reserva</mat-label>
-      <input matInput [value]="data.reserva ? (data.reserva | date:'shortTime') : 'Sin reserva'" readonly>
-    </mat-form-field>
+  <mat-label>Tu Reserva</mat-label>
+  <input matInput [value]="reservaDisplay" readonly>
+</mat-form-field>
   </form>
 </mat-dialog-content>
 
