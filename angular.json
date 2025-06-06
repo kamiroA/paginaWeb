@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/mi-proyecto-angular",
+            "outputPath": "dist/mi-proyecto-angular/browser",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -33,14 +33,12 @@
           },
           "configurations": {
             "production": {
-
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
-
               "budgets": [
                 {
                   "type": "initial",
