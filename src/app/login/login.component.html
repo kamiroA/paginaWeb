@@ -1,39 +1,47 @@
-<section class="login-section">
+<!-- Pantalla de carga -->
+<div *ngIf="showLoader" class="loader-screen">
+  <app-cube-loader></app-cube-loader>
+</div>
+
+
+
+<!-- Pantalla de login -->
+<section *ngIf="showLogin" class="login-section">
+  <!-- Fondo animado con logos -->
+  <div class="login-background"></div>
+
   <div class="login-container">
     <div class="login-card">
       <h2 class="login-title">Login</h2>
+
       <form [formGroup]="loginForm" (ngSubmit)="login()">
-        <!-- Campo de Email -->
         <div class="input-group">
-          <input type="email" placeholder="Email" formControlName="email" class="login-input"/>
+          <input type="email" placeholder="Email" formControlName="email" class="login-input" />
+          <small *ngIf="emailControl?.touched && emailControl?.invalid">Ingresa tu email.</small>
         </div>
-        <!-- Muestra un mensaje simple si el campo está vacío -->
-        <div class="input-group" *ngIf="emailControl?.touched && emailControl?.invalid">
-          <small>Ingresa tu email.</small>
-        </div>
-        <!-- Campo de Password -->
+
         <div class="input-group">
-          <input type="password" placeholder="Password" formControlName="password" class="login-input"/>
+          <input type="password" placeholder="Password" formControlName="password" class="login-input" />
+          <small *ngIf="passwordControl?.touched && passwordControl?.invalid">Ingresa tu contraseña.</small>
         </div>
-        <!-- Mensaje simple si el password está vacío -->
-        <div class="input-group" *ngIf="passwordControl?.touched && passwordControl?.invalid">
-          <small>Ingresa tu contraseña.</small>
-        </div>
+
         <button type="submit" [disabled]="isLoading" class="login-button">Login</button>
       </form>
+
       <button type="button" class="login-button-google" (click)="loginWithGoogle()" [disabled]="isLoading">
         <img src="https://img.icons8.com/?size=512&id=17949&format=png" alt="Google logo" />
+        <span>Login con Google</span>
       </button>
-      <!-- Enlace para restablecer la contraseña -->
+
       <div class="forgot-password">
         <a (click)="resetPassword()" class="forgot-password-link">Olvidé mi contraseña</a>
       </div>
-      <!-- Mensajes de error o información -->
+
       <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
       <div *ngIf="infoMessage" class="info-message">{{ infoMessage }}</div>
-      <!-- Enlace para ir al registro -->
+
       <div class="signup-text">
-        ¿No tienes cuenta?  
+        ¿No tienes cuenta?
         <a routerLink="/register" class="signup-link">Regístrate</a>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { CubeLoaderComponent } from '../cube-loader/cube-loader.component'; // Asegúrate de importar correctamente
 
 @Component({
   selector: 'app-login',
@@ -17,20 +18,25 @@ import { RouterModule } from '@angular/router';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterModule
+    RouterModule,
+    CubeLoaderComponent
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   errorMessage: string = '';
   infoMessage: string = '';
   isLoading: boolean = false;
 
+  showLoader = true;
+  showLogo = false;
+  showLogin = false;
+
   constructor(
-    private auth: Auth, 
-    private router: Router, 
+    private auth: Auth,
+    private router: Router,
     private fb: FormBuilder
   ) {
     this.loginForm = this.fb.group({
@@ -39,9 +45,17 @@ export class LoginComponent {
     });
   }
 
+  ngOnInit(): void {
+    setTimeout(() => {
+      this.showLoader = false;
+      this.showLogin = true;
+    }, 3000); // Duración de la animación de carga
+  }
+
   get emailControl() {
     return this.loginForm.get('email');
   }
+
   get passwordControl() {
     return this.loginForm.get('password');
   }

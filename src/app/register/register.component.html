@@ -1,69 +1,49 @@
 <section class="register-section">
+  <div class="register-background"></div>
+
   <div class="register-container">
     <div class="register-card">
-      <h2 class="register-title">Create an Account</h2>
+      <h2 class="register-title">Crea una Cuenta</h2>
+
       <form [formGroup]="registerForm" (ngSubmit)="register()">
-        <!-- Campo de Email -->
+        <!-- Email -->
         <div class="input-group">
-          <input
-            type="email"
-            placeholder="Email"
-            formControlName="email"
-            class="register-input"
-          />
+          <input type="email" placeholder="Email" formControlName="email" class="register-input" />
           <div class="error" *ngIf="emailControl?.touched && emailControl?.invalid">
-            <small *ngIf="emailControl?.errors?.['required']">
-              The email is required.
-            </small>
-            <small *ngIf="emailControl?.errors?.['email']">
-              Please enter a valid email.
-            </small>
+            <small *ngIf="emailControl?.errors?.['required']">El correo es necesario.</small>
+            <small *ngIf="emailControl?.errors?.['email']">Introduce un email valido</small>
           </div>
         </div>
-  
-        <!-- Campo de Password -->
+
+        <!-- Password -->
         <div class="input-group">
-          <input
-            type="password"
-            placeholder="Password"
-            formControlName="password"
-            class="register-input"
-          />
+          <input type="password" placeholder="Password" formControlName="password" class="register-input" />
           <div class="error" *ngIf="passwordControl?.touched && passwordControl?.invalid">
-            <small *ngIf="passwordControl?.errors?.['required']">
-              The password is required.
-            </small>
-            <small *ngIf="passwordControl?.errors?.['minlength']">
-              Password must be at least 6 characters.
-            </small>
+            <small *ngIf="passwordControl?.errors?.['required']">La contraseña es necesaria</small>
+            <small *ngIf="passwordControl?.errors?.['minlength']">La contraseña debe tener almenos 6 caracteres.</small>
           </div>
         </div>
-  
-        <!-- Campo de Confirm Password -->
+
+        <!-- Confirm Password -->
         <div class="input-group">
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            formControlName="confirmPassword"
-            class="register-input"
-          />
+          <input type="password" placeholder="Confirm Password" formControlName="confirmPassword" class="register-input" />
           <div class="error" *ngIf="confirmPasswordControl?.touched && registerForm.errors?.['mismatch']">
-            <small>Passwords do not match.</small>
+            <small>Las contraseñas no coinciden.</small>
           </div>
         </div>
-  
-        <!-- Botón de Registro -->
+
+        <!-- Botón -->
         <button type="submit" [disabled]="isLoading" class="register-button">
           {{ isLoading ? 'Registering...' : 'Register' }}
         </button>
       </form>
-  
-      <!-- Mensaje de Error General -->
+
+      <!-- Mensaje de error -->
       <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
-  
-      <!-- Enlace a Login -->
+
+      <!-- Enlace a login -->
       <p class="login-link">
-        Already have an account? <a href="/login">Login</a>
+        ¿Ya tienes una cuenta? <a routerLink="/login">Login</a>
       </p>
     </div>
   </div>

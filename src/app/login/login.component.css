@@ -1,130 +1,230 @@
-/* Sección principal: centra vertical y horizontalmente */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f2f5;
+}
+
+.loader-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4); /* fondo oscuro semitransparente */
+  backdrop-filter: blur(6px);     /* desenfoque del fondo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+
+
+.logo-animated {
+  width: 200px;
+  animation: swing 2s ease-in-out infinite;
+  filter: invert(1);
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotateY(-90deg); }
+  50% { transform: rotateY(0deg); }
+}
+
+/* Fondo animado con logos repetidos */
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/logo.png');
+  background-repeat: repeat;
+  background-size: 120px;
+  opacity: 0.1;
+  animation: floatBackground 60s linear infinite;
+  z-index: 0;
+}
+
+@keyframes floatBackground {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 1000px; }
+}
+
+/* Sección principal */
 .login-section {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  position: relative;
   background-color: #f0f2f5;
+  padding: 20px;
+  z-index: 1;
 }
 
-/* Contenedor del login con ancho máximo definido y centrado */
+/* Contenedor del login */
 .login-container {
   width: 100%;
-  max-width: 350px;
-  padding: 20px;
+  max-width: 400px;
   margin: 0 auto;
 }
 
-/* Tarjeta de login con fondo blanco, bordes redondeados y sombra sutil */
+/* Tarjeta con efecto glassmorphism */
 .login-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  padding: 30px 20px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 40px 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: transform 0.3s ease;
 }
 
-/* Título centrado y con un tamaño de fuente destacado */
+.login-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Título */
 .login-title {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
+  font-size: 2rem;
+  margin-bottom: 25px;
   color: #333;
+  font-weight: 600;
 }
 
-/* Grupo de inputs, alineados a la izquierda para los campos del formulario */
+/* Inputs */
 .input-group {
   margin-bottom: 15px;
   text-align: left;
 }
 
-/* Estilo para los campos de entrada */
 .login-input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   font-size: 1rem;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
   box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-/* Botones más compactos y con ancho automático para no ocupar toda la línea */
+.login-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+  outline: none;
+}
+
+/* Botones */
 .login-button,
 .login-button-google {
-  padding: 10px 20px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   margin-top: 10px;
-  width: auto;  
+  width: 100%;
+  max-width: 280px;
+  transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
-/* Botón de login tradicional */
 .login-button {
   background-color: #007bff;
 }
 
-/* Botón de login con Google: se usa flex para centrar la imagen y el texto */
+.login-button:hover {
+  transform: scale(1.03);
+  background-color: #0056b3;
+}
+
 .login-button-google {
   background-color: #dd4b39;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  
 }
 
-/* Imagen dentro del botón de Google */
+.login-button-google:hover {
+  background-color: #c23321;
+  transform: scale(1.03);
+}
+
 .login-button-google img {
-  height: 20px;
+  height: 18px;
   filter: drop-shadow(1px 1px 2px rgb(48, 47, 47));
-  
 }
 
-/* Enlace "Olvidé mi contraseña" alineado a la derecha */
+/* Enlaces */
 .forgot-password {
   text-align: center;
-  margin: 10px 0 15px;
+  margin: 15px 0;
 }
 
-/* Estilo para el enlace de "Olvidé mi contraseña" */
-.forgot-password-link {
-  color: #007bff;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-/* Mensaje de error: fondo rojo muy claro, texto rojo */
-.error-message {
-  background-color: #ffe5e5;
-  color: #ff0000;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Mensaje de información: fondo verde muy claro, texto verde oscuro */
-.info-message {
-  background-color: #e5ffe5;
-  color: #008000;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Texto para el enlace de registro centrado */
-.signup-text {
-  text-align: center;
-  margin-top: 20px;
-}
-
-/* Enlace de registro */
+.forgot-password-link,
 .signup-link {
   color: #007bff;
   text-decoration: none;
   cursor: pointer;
+  transition: color 0.3s;
+}
+
+.forgot-password-link:hover,
+.signup-link:hover {
+  color: #0056b3;
+}
+
+/* Mensajes */
+.error-message {
+  background-color: #ffe5e5;
+  color: #ff0000;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.info-message {
+  background-color: #e5ffe5;
+  color: #008000;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Registro */
+.signup-text {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .login-card {
+    padding: 30px 20px;
+  }
+
+  .logo-animated {
+    width: 160px;
+  }
+
+  .login-button,
+  .login-button-google {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+  }
+
+  .login-button-google img {
+    height: 16px;
+  }
 }
