@@ -1,22 +1,23 @@
 import { Component, OnInit, inject, NgZone } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
+
+import { Auth, onAuthStateChanged, signOut } from '@angular/fire/auth';
+import { Firestore, doc, docData } from '@angular/fire/firestore';
+
 import { ApiEndpointsService } from '../api-endpoints.service';
 import { CreateEventDialogComponent } from '../create-event-dialog/create-event-dialog.component';
 import { EditProfileComponent } from '../edit-perfil/edit-perfil.component';
 import { JoinEventDialogComponent } from '../join-event-dialog/join-event-dialog.component';
-import { FormsModule } from '@angular/forms';
-import { NgIf } from '@angular/common';
-
-// Importar Firebase Auth y Firestore (versión modular)
-import { Auth, onAuthStateChanged, signOut } from '@angular/fire/auth';
-import { Firestore, doc, docData } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-navbar',
@@ -34,16 +35,12 @@ import { Firestore, doc, docData } from '@angular/fire/firestore';
   styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent implements OnInit {
-  // Datos del usuario
   userName: string = 'Usuario';
   profileImage: string = 'DefaultPF.png';
   isLogged: boolean = false;
-  // ID del usuario actual (cuando está logueado)
   currentUid: string = '';
-  // Variable para búsqueda de evento
   eventQuery: string = '';
 
-  // Servicios inyectados usando el mecanismo inject()
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private router: Router = inject(Router);
@@ -52,18 +49,17 @@ export class NavbarComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private http: HttpClient,
-    private endpoints: ApiEndpointsService
+    private endpoints: ApiEndpointsService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     onAuthStateChanged(this.auth, (user) => {
-      // Forzar la ejecución de este callback dentro de la zona de Angular
       this.ngZone.run(() => {
         if (user) {
           this.isLogged = true;
           this.currentUid = user.uid;
-          const userDocRef = doc(this.firestore, "usuarios", user.uid);
-          // La suscripción se envuelve en NgZone para asegurar la detección de cambios
+          const userDocRef = doc(this.firestore, 'usuarios', user.uid);
           docData(userDocRef, { idField: 'id' }).subscribe((data: any) => {
             this.ngZone.run(() => {
               this.userName = data?.name || user.displayName || 'Usuario';
@@ -71,9 +67,7 @@ export class NavbarComponent implements OnInit {
             });
           });
         } else {
-          this.ngZone.run(() => {
-            this.isLogged = false;
-          });
+          this.isLogged = false;
         }
       });
     });
@@ -86,91 +80,112 @@ export class NavbarComponent implements OnInit {
       maxWidth: '90vw',
       height: '70vh',
       minHeight: '400px',
-      data: { currentUserName: this.userName }  // Enviamos el nombre del usuario
+      data: { currentUserName: this.userName }
     });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.createEvent(result);
-      }
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.createEvent(result);
     });
   }
 
   createEvent(eventData: any): void {
-    // Se envía el evento al endpoint correspondiente
-    this.http
-      .post(this.endpoints.eventosEndpoint, eventData, { responseType: 'text' })
-      .subscribe({
-        next: (response: string) => {
-          console.log('Evento creado:', response);
-        },
-        error: err => {
-          console.error('Error creando evento:', err);
-        }
-      });
+    this.http.post(this.endpoints.eventosEndpoint, eventData, { responseType: 'text' }).subscribe({
+      next: (response: string) => {
+        this.snackBar.open('Evento creado con éxito.', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['snackbar-success']
+        });
+      },
+      error: (err) => {
+        this.snackBar.open('Error creando evento.', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['snackbar-error']
+        });
+      }
+    });
   }
 
   openEditProfileDialog(): void {
     if (!this.isLogged) {
       this.goToLogin();
-    } else {
-      const dialogRef = this.dialog.open(EditProfileComponent, {
-        width: '50vw',
-        minWidth: '600px',
-        maxWidth: '90vw',
-        height: '50vh',
-        minHeight: '400px'
-      });
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          console.log('Perfil actualizado', result);
-        }
-      });
+      return;
     }
+
+    const dialogRef = this.dialog.open(EditProfileComponent, {
+      width: '50vw',
+      minWidth: '600px',
+      maxWidth: '90vw',
+      height: '50vh',
+      minHeight: '400px'
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.snackBar.open('Perfil actualizado.', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['snackbar-info']
+        });
+      }
+    });
   }
 
   goToLogin(): void {
     this.router.navigate(['/login']);
   }
-  
+
   logout(): void {
     signOut(this.auth)
       .then(() => {
-        // Forzamos la actualización dentro de la zona de Angular
         this.ngZone.run(() => {
           this.isLogged = false;
           this.userName = 'Usuario';
           this.profileImage = 'DefaultPF.png';
           this.router.navigate(['/login']);
+          this.snackBar.open('Sesión cerrada.', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['snackbar-info']
+          });
         });
       })
       .catch((error) => {
-        console.error("Error al cerrar sesión:", error);
+        this.snackBar.open('Error al cerrar sesión.', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['snackbar-error']
+        });
       });
   }
 
   searchEvent(): void {
-    if (!this.eventQuery || this.eventQuery.trim() === '') {
-      alert('Por favor ingresa un ID de evento.');
+    const eventId = this.eventQuery.trim();
+    if (!eventId) {
+      this.snackBar.open('Por favor ingresa un ID de evento.', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['snackbar-warning']
+      });
       return;
     }
-    const eventId = this.eventQuery.trim();
+
     const searchUrl = this.endpoints.getEventoByIdEndpoint(eventId);
     this.http.get<any>(searchUrl).subscribe({
       next: (data) => {
         if (data) {
-          if (!data.id) {
-            data.id = eventId;
-          }
+          if (!data.id) data.id = eventId;
           this.dialog.open(JoinEventDialogComponent, {
             width: '400px',
             data: { event: data, currentUser: this.userName }
           });
         } else {
-          alert('Evento no encontrado.');
+          this.snackBar.open('Evento no encontrado.', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['snackbar-warning']
+          });
         }
       },
       error: (err) => {
-        alert('Error al buscar el evento: ' + err.message);
+        this.snackBar.open('Error al buscar el evento.', 'Cerrar', {
+          duration: 1500,
+          panelClass: ['snackbar-error']
+        });
       }
     });
   }

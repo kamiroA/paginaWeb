@@ -3,21 +3,26 @@
     <img class="logo" src="logo.png" alt="Logo" />
     <span class="logo-text">PlanPal</span>
   </div>
+
   <div class="center-section">
     <button mat-button class="create-event-button" (click)="openCreateEventDialog()">
-      Create Event
+      Crear evento
     </button>
 
-    <mat-form-field appearance="outline" class="search-field">
-    
-      <mat-label>Introduce el codigo</mat-label>
-      <input matInput [(ngModel)]="eventQuery" (keydown.enter)="searchEvent()" />
-    </mat-form-field>
-
-    <button mat-button class="busqueda-button" (click)="searchEvent()">
-      <mat-icon matPrefix>search</mat-icon>
-    </button>
+    <div class="custom-search-container">
+      <input
+        type="text"
+        [(ngModel)]="eventQuery"
+        (keydown.enter)="searchEvent()"
+        placeholder="Introduce el código"
+        class="custom-input"
+      />
+      <button class="custom-search-button" (click)="searchEvent()">
+        <mat-icon>search</mat-icon>
+      </button>
+    </div>
   </div>
+
   <div class="right-section">
     <ng-container *ngIf="isLogged; else notLogged">
       <button mat-icon-button class="profileButton" [matMenuTriggerFor]="profileMenu">
@@ -26,7 +31,7 @@
         <mat-icon>arrow_drop_down</mat-icon>
       </button>
       <mat-menu #profileMenu="matMenu">
-        <button mat-menu-item (click)="openEditProfileDialog()">Editar Perfil</button>
+        <button mat-menu-item (click)="openEditProfileDialog()">Editar perfil</button>
         <button mat-menu-item (click)="logout()">Cerrar sesión</button>
       </mat-menu>
     </ng-container>
