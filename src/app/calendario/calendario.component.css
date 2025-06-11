@@ -2,17 +2,19 @@
 /*     DASHBOARD GENERAL       */
 /* --------------------------- */
 .dashboard-container {
-  max-width: 1400px;
+  max-width: 1600px; /* Ancho aumentado (antes 1400px) */
   height: auto;
   margin: 30px auto;
-  margin-bottom: auto;
-  padding: 0 30px 400px; 
+  padding: 0 30px 400px;
   display: flex;
   flex-direction: column;
   gap: 40px;
   background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Título de la sección del Calendario */
 .calendar-section h2 {
   font-size: 2rem;
   color: #002142;
@@ -21,23 +23,24 @@
   text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
 }
 
+/* Contenedor del calendario */
 .calendar-wrapper {
   width: 100%;
-  max-width: 1300px;
+  max-width: 1500px; /* Aumentado de 1300px */
   margin: 0 auto;
   padding: 10px;
   border: 2px solid #9e9e9e;
   border-radius: 12px;
-  box-shadow: 0 6px 10px rgba(39,39,39,0.15);
+  box-shadow: 0 6px 10px rgba(39, 39, 39, 0.15);
   background-color: #fff;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  height: max-content;
+  height: auto;
 }
 
 .calendar-wrapper:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 16px rgba(39,39,39,0.2);
+  box-shadow: 0 8px 16px rgba(39, 39, 39, 0.2);
 }
 
 /* --------------------------- */
@@ -83,31 +86,7 @@
 /* --------------------------- */
 /*           BADGES            */
 /* --------------------------- */
-/* Estos estilos se aplican dentro de FullCalendar, al contenedor .fc-event-custom */
-.fc-event-custom .event-badge {
-  font-size: 0.75rem;
-  padding: 2px 5px;
-  margin-right: 4px;
-  margin-bottom: 2px;
-  border-radius: 8px !important;   /* Fuerza el redondeo */
-  display: inline-block;
-  line-height: 1;
-  color: #fff !important;
-}
-
-.fc-event-custom .host-badge {
-  background-color: #1976d2 !important;
-}
-
-.fc-event-custom .booked-badge {
-  background-color: #FF9800 !important;
-}
-
-.fc-event-custom .etiqueta-badge {
-  background-color: #4CAF50 !important;
-}
-
-/* Estilos para los badges en la parte inferior (listas de eventos) */
+.fc-event-custom .event-badge,
 .event-badge {
   font-size: 0.75rem;
   padding: 2px 5px;
@@ -119,14 +98,17 @@
   color: #fff !important;
 }
 
+.fc-event-custom .host-badge,
 .host-badge {
   background-color: #1976d2 !important;
 }
 
+.fc-event-custom .booked-badge,
 .booked-badge {
   background-color: #FF9800 !important;
 }
 
+.fc-event-custom .etiqueta-badge,
 .etiqueta-badge {
   background-color: #4CAF50 !important;
 }

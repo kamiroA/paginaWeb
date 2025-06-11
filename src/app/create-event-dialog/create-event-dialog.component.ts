@@ -1,12 +1,24 @@
 import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ApiEndpointsService } from '../api-endpoints.service';
 
 @Component({
   selector: 'app-create-event-dialog',
@@ -18,22 +30,27 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatIconModule
   ],
   templateUrl: './create-event-dialog.component.html',
   styleUrls: ['./create-event-dialog.component.css']
 })
 export class CreateEventDialogComponent {
   eventForm: FormGroup;
-  availableSlots: string[] = []; // Slots calculados entre horaInicio y horaFin
-
+  availableSlots: string[] = [];
+  isLoading: boolean = false;
+  
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<CreateEventDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private http: HttpClient,
+    private endpoints: ApiEndpointsService,
+    private snackBar: MatSnackBar
   ) {
-    // Creamos el formulario con los campos que coinciden con el objeto Evento,
-    // incluyendo el nuevo campo "etiqueta".
+    // Se configura el formulario con los validadores necesarios
     this.eventForm = this.fb.group({
       codigo: ['', Validators.required],
       descripcion: ['', Validators.required],
@@ -43,7 +60,6 @@ export class CreateEventDialogComponent {
       etiqueta: ['', Validators.required]
     }, { validators: this.checkDates });
 
-    // Cuando cambie la hora de inicio o fin, se recalculan los slots disponibles.
     this.eventForm.get('horaInicio')?.valueChanges.subscribe(() => this.updateAvailableSlots());
     this.eventForm.get('horaFin')?.valueChanges.subscribe(() => this.updateAvailableSlots());
   }
@@ -63,8 +79,7 @@ export class CreateEventDialogComponent {
   }
 
   /**
-   * Calcula los slots disponibles entre la hora de inicio y hora fin utilizando un intervalo de 30 minutos.
-   * Estos slots se presentarán en el selector para que el usuario elija las horas disponibles.
+   * Calcula los slots (intervalos de 30 minutos) entre la hora de inicio y la de fin.
    */
   updateAvailableSlots(): void {
     const inicio = this.eventForm.get('horaInicio')?.value;
@@ -73,8 +88,8 @@ export class CreateEventDialogComponent {
       const startDate = new Date(inicio);
       const endDate = new Date(fin);
       const slots: string[] = [];
-      const stepMinutes = 30; // Intervalo de 30 minutos
       let current = new Date(startDate);
+      const stepMinutes = 30;
       while (current < endDate) {
         slots.push(current.toISOString());
         current.setMinutes(current.getMinutes() + stepMinutes);
@@ -85,21 +100,45 @@ export class CreateEventDialogComponent {
     }
   }
 
+  /**
+   * Cierra el diálogo.
+   */
   onCancel(): void {
     this.dialogRef.close();
   }
 
+  /**
+   * Envía el formulario y llama a la API para crear el evento, mostrando el loader hasta obtener la respuesta.
+   */
   onSubmit(): void {
     if (this.eventForm.valid) {
-      // Se obtiene la información del formulario.
-      let formValue = this.eventForm.value;
+      this.isLoading = true;
+      const formValue = this.eventForm.value;
       if (!formValue.horasDisponibles) {
         formValue.horasDisponibles = [];
       }
       formValue.citasReservadas = {};
-      // Asigna el nombre del creador usando la propiedad pasada en los datos del diálogo.
-      formValue.creadorId = this.data.currentUserName; // Se guarda el nombre, no el ID.
-      this.dialogRef.close(formValue);
+      formValue.creadorId = this.data.currentUserName;
+
+      const createEventUrl = this.endpoints.eventosEndpoint;
+      
+      this.http.post(createEventUrl, formValue, { responseType: 'text' })
+        .pipe(finalize(() => { this.isLoading = false; }))
+        .subscribe({
+          next: (response: string) => {
+            this.snackBar.open('Evento creado con éxito.', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['snackbar-success']
+            });
+            this.dialogRef.close(formValue);
+          },
+          error: (error) => {
+            this.snackBar.open('Error creando evento.', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['snackbar-error']
+            });
+          }
+        });
     }
   }
 }

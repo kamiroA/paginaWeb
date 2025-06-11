@@ -1,11 +1,60 @@
 :host {
   display: block;
+  padding: 24px;
+  font-family: Roboto, sans-serif;
 }
 
-mat-dialog-content {
-  min-width: 300px;
+/* Encabezado del diálogo */
+.dialog-header {
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
 }
 
+/* Contenido del diálogo */
+.dialog-content {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+/* Detalles del evento */
+.event-details p {
+  margin: 8px 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+/* Selector de horas */
 .full-width {
   width: 100%;
+}
+.time-selector {
+  margin: 20px 0;
+}
+
+/* Reservas existentes */
+.reservations {
+  margin-top: 20px;
+}
+.reservations h3 {
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+  color: #3f51b5;
+}
+.reservations ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+.reservations li {
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+}
+
+/* Acciones del diálogo */
+mat-dialog-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

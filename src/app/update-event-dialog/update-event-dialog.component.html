@@ -1,72 +1,83 @@
-<h2 mat-dialog-title>
-  {{ editMode ? 'Modificar Evento' : 'Detalles del Evento' }}
-</h2>
+<div class="dialog-header">
+  <h2 mat-dialog-title>
+    {{ editMode ? 'Modificar Evento' : 'Detalles del Evento' }}
+  </h2>
+  <button mat-icon-button class="close-button" (click)="onClose()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 <mat-dialog-content>
   <form [formGroup]="eventForm">
-    <!-- Campo: ID del Evento con botón de copiar -->
-    <mat-form-field appearance="fill" style="width: 100%;">
+    <!-- Fila 1: ID del Evento (completo) con botón de copiar -->
+    <mat-form-field appearance="fill" class="full-width">
       <mat-label>ID del Evento</mat-label>
       <input matInput [value]="data.id" readonly>
       <button mat-icon-button matSuffix (click)="copyId(data.id)">
         <mat-icon>content_copy</mat-icon>
       </button>
     </mat-form-field>
-
-    <!-- Campo: Código/Título del Evento -->
-    <mat-form-field appearance="fill" style="width: 100%;">
-      <mat-label>Evento</mat-label>
-      <input matInput formControlName="codigo">
-      <mat-error *ngIf="eventForm.get('codigo')?.hasError('required')">
-        Código es obligatorio.
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Campo: Descripción -->
-    <mat-form-field appearance="fill" style="width: 100%;">
+    
+    <!-- Fila 2: Nombre del Evento y Etiqueta (dos columnas) -->
+    <div class="two-column-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Nombre del Evento</mat-label>
+        <input matInput formControlName="codigo">
+        <mat-error *ngIf="eventForm.get('codigo')?.hasError('required')">
+          El nombre del evento es obligatorio.
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Etiqueta</mat-label>
+        <mat-select formControlName="etiqueta">
+          <mat-option value="profesional">Profesional</mat-option>
+          <mat-option value="ocio">Ocio</mat-option>
+          <mat-option value="personal">Personal</mat-option>
+          <mat-option value="academico">Académico</mat-option>
+        </mat-select>
+        <mat-error *ngIf="eventForm.get('etiqueta')?.hasError('required')">
+          La etiqueta es obligatoria.
+        </mat-error>
+      </mat-form-field>
+    </div>
+    
+    <!-- Fila 3: Descripción (100% ancho) -->
+    <mat-form-field appearance="fill" class="full-width">
       <mat-label>Descripción</mat-label>
       <textarea matInput formControlName="descripcion"></textarea>
       <mat-error *ngIf="eventForm.get('descripcion')?.hasError('required')">
-        Descripción es obligatoria.
+        La descripción es obligatoria.
       </mat-error>
     </mat-form-field>
-
-    <!-- Campo: Hora de Inicio -->
-    <mat-form-field appearance="fill" style="width: 100%;">
-      <mat-label>Hora de Inicio</mat-label>
-      <input matInput type="datetime-local" formControlName="horaInicio">
-      <mat-error *ngIf="eventForm.get('horaInicio')?.hasError('required')">
-        La hora de inicio es obligatoria.
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Campo: Hora de Fin -->
-    <mat-form-field appearance="fill" style="width: 100%;">
-      <mat-label>Hora de Fin</mat-label>
-      <input matInput type="datetime-local" formControlName="horaFin">
-      <mat-error *ngIf="eventForm.get('horaFin')?.hasError('required')">
-        La hora de fin es obligatoria.
-      </mat-error>
-      <mat-error *ngIf="eventForm.errors?.['dateMismatch']">
-        La hora de inicio debe ser anterior a la hora de fin.
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Campo: Etiqueta -->
-    <mat-form-field appearance="fill" style="width: 100%;">
-      <mat-label>Etiqueta</mat-label>
-      <mat-select formControlName="etiqueta">
-        <mat-option value="profesional">Profesional</mat-option>
-        <mat-option value="ocio">Ocio</mat-option>
-        <mat-option value="personal">Personal</mat-option>
-        <mat-option value="academico">Académico</mat-option>
-      </mat-select>
-      <mat-error *ngIf="eventForm.get('etiqueta')?.hasError('required')">
-        La etiqueta es obligatoria.
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Campo: Horas Disponibles (modo edición) -->
-    <mat-form-field *ngIf="!data.readOnly && availableSlots.length > 0" appearance="fill" style="width: 100%;">
+    
+    <!-- Fila 4: Hora de Inicio y Hora de Fin (dos columnas) -->
+    <div class="two-column-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Hora de Inicio</mat-label>
+        <input matInput type="datetime-local" formControlName="horaInicio">
+        <mat-icon matSuffix>calendar_today</mat-icon>
+        <mat-error *ngIf="eventForm.get('horaInicio')?.hasError('required')">
+          La hora de inicio es obligatoria.
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Hora de Fin</mat-label>
+        <input matInput type="datetime-local" formControlName="horaFin">
+        <mat-icon matSuffix>calendar_today</mat-icon>
+        <mat-error *ngIf="eventForm.get('horaFin')?.hasError('required')">
+          La hora de fin es obligatoria.
+        </mat-error>
+        <mat-error *ngIf="eventForm.errors?.['dateMismatch']">
+          La hora de inicio debe ser anterior a la hora de fin.
+        </mat-error>
+      </mat-form-field>
+    </div>
+    
+    <!-- Fila 5: Horas Disponibles (solo en modo edición y si existen) -->
+    <mat-form-field
+      *ngIf="!data.readOnly && availableSlots.length > 0"
+      appearance="fill"
+      class="full-width"
+    >
       <mat-label>Horas Disponibles</mat-label>
       <mat-select formControlName="horasDisponibles" multiple>
         <mat-option *ngFor="let slot of availableSlots" [value]="slot">
@@ -74,21 +85,23 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-
-    <!-- Campo: Reserva del usuario (modo lectura) -->
-    <mat-form-field *ngIf="data.readOnly" appearance="fill" style="width: 100%;">
-  <mat-label>Tu Reserva</mat-label>
-  <input matInput [value]="reservaDisplay" readonly>
-</mat-form-field>
+    
+    <!-- Fila 6: Reserva (modo solo lectura) -->
+    <mat-form-field
+      *ngIf="data.readOnly"
+      appearance="fill"
+      class="full-width"
+    >
+      <mat-label>Tu Reserva</mat-label>
+      <input matInput [value]="reservaDisplay" readonly>
+    </mat-form-field>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <!-- Si el diálogo está en modo solo lectura, muestra solo "Cerrar" -->
   <ng-container *ngIf="data.readOnly">
     <button mat-button (click)="onClose()">Cerrar</button>
   </ng-container>
-  <!-- Modo editable -->
   <ng-container *ngIf="!data.readOnly">
     <ng-container *ngIf="!editMode">
       <button mat-button (click)="onEnableEdit()">Modificar</button>

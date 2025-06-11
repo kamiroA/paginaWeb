@@ -1,6 +1,6 @@
 :host {
   display: block;
-  max-width: 750px;
+  max-width: 1000px; /* Ancho aumentado de 750px a 900px */
   margin: auto;
   padding: 24px;
   background-color: #fff;
@@ -20,11 +20,43 @@
   }
 }
 
-h2[mat-dialog-title] {
+/* Header del diálogo */
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.dialog-header h2 {
   font-size: 26px;
   font-weight: 600;
   color: #3f51b5;
+}
+
+.close-button {
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: #3f51b5;
+}
+
+/* Cuadrícula de dos columnas */
+.two-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
   margin-bottom: 20px;
+}
+
+/* Elementos de ancho completo */
+.full-width {
+  width: 100%;
+  margin-bottom: 15px;
 }
 
 mat-dialog-content {
@@ -48,11 +80,6 @@ mat-form-field.mat-form-field-appearance-fill .mat-form-field-flex {
   background-color: #fff;
 }
 
-.mat-input-element,
-.mat-select-trigger {
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-
 mat-dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -69,4 +96,14 @@ button[mat-button] {
 
 button[mat-button]:hover {
   opacity: 0.9;
+}
+
+@media (max-width: 600px) {
+  :host {
+    padding: 16px;
+    max-width: 90%;
+  }
+  .two-column-grid {
+    grid-template-columns: 1fr;
+  }
 }

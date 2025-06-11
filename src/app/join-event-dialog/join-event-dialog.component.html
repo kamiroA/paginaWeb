@@ -1,12 +1,17 @@
-<h2 mat-dialog-title>Unirse al Evento</h2>
-<mat-dialog-content style="max-height: calc(100vh - 200px); overflow: auto;">
-  <p><strong>Nombre:</strong> {{ data.event.codigo }}</p>
-  <p><strong>Descripción:</strong> {{ data.event.descripcion }}</p>
-  <p><strong>Inicio:</strong> {{ data.event.horaInicio | date:'short' }}</p>
-  <p><strong>Fin:</strong> {{ data.event.horaFin | date:'short' }}</p>
+<div class="dialog-header">
+  <h2 mat-dialog-title>Unirse al Evento</h2>
+</div>
+
+<mat-dialog-content class="dialog-content">
+  <div class="event-details">
+    <p><strong>Nombre:</strong> {{ data.event.codigo }}</p>
+    <p><strong>Descripción:</strong> {{ data.event.descripcion }}</p>
+    <p><strong>Inicio:</strong> {{ data.event.horaInicio | date:'short' }}</p>
+    <p><strong>Fin:</strong> {{ data.event.horaFin | date:'short' }}</p>
+  </div>
   
   <!-- Selector de horas disponibles -->
-  <mat-form-field appearance="fill" class="full-width">
+  <mat-form-field appearance="fill" class="full-width time-selector">
     <mat-label>Selecciona una hora disponible</mat-label>
     <mat-select [formControl]="horaControl" multiple>
       <mat-option *ngFor="let hora of availableHours" [value]="hora">
@@ -18,12 +23,12 @@
     </mat-error>
   </mat-form-field>
 
-  <!-- Sección para mostrar las reservas existentes -->
-  <div *ngIf="reservedAppointments && reservedAppointments.length > 0" style="margin-top: 16px;">
+  <!-- Reservas existentes -->
+  <div *ngIf="reservedAppointments && reservedAppointments.length > 0" class="reservations">
     <h3>Reservas existentes:</h3>
-    <ul style="padding-left: 16px;">
+    <ul>
       <li *ngFor="let reserva of reservedAppointments">
-        <strong>Hora:</strong> {{ reserva.hora | date:'shortTime' }} 
+        <strong>Hora:</strong> {{ reserva.hora | date:'shortTime' }}
         &nbsp;-&nbsp;
         <strong>Reservado por:</strong> {{ reserva.reservadoPor }}
       </li>

@@ -75,11 +75,7 @@ export class NavbarComponent implements OnInit {
 
   openCreateEventDialog(): void {
     const dialogRef = this.dialog.open(CreateEventDialogComponent, {
-      width: '50vw',
-      minWidth: '600px',
-      maxWidth: '90vw',
-      height: '70vh',
-      minHeight: '400px',
+     
       data: { currentUserName: this.userName }
     });
 
@@ -112,10 +108,10 @@ export class NavbarComponent implements OnInit {
     }
 
     const dialogRef = this.dialog.open(EditProfileComponent, {
-      width: '50vw',
+      width: '60vw',
       minWidth: '600px',
       maxWidth: '90vw',
-      height: '50vh',
+      height: '60vh',
       minHeight: '400px'
     });
 

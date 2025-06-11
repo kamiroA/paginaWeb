@@ -1,11 +1,20 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { updateDoc, doc, docData } from '@angular/fire/firestore';
+import { Firestore } from '@angular/fire/firestore';
 import { HttpClient } from '@angular/common/http';
 import { ApiEndpointsService } from '../api-endpoints.service';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,11 +43,14 @@ export class UpdateEventDialogComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    private firestore: Firestore,
     private http: HttpClient,
     private apiEndpoints: ApiEndpointsService,
     public dialogRef: MatDialogRef<UpdateEventDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private snackBar: MatSnackBar
   ) {
+    // Se agregó el control "reserva" para usarlo en el template (por ej. en un getter reservaDisplay).
     this.eventForm = this.fb.group({
       id: [{ value: '', disabled: true }],
       codigo: [{ value: '', disabled: true }, Validators.required],
@@ -62,38 +74,8 @@ export class UpdateEventDialogComponent implements OnInit {
   }
 
   /**
-   * Procesa el campo de reserva:
-   * - Si es un Firestore Timestamp (con propiedad seconds), lo convierte a Date.
-   * - Si es un objeto (por ejemplo, un mapa con reservas), itera sobre sus entradas y para cada par
-   *   extrae la hora (formateada) y el nombre, devolviendo una cadena del estilo "08:30 - Nombre".
-   * - En otros casos, lo devuelve tal como está.
-   */
-  private parseReserva(value: any): any {
-    if (!value) return null;
-    if (typeof value === 'object') {
-      if ('seconds' in value) {
-        return new Date(value.seconds * 1000);
-      }
-      // Se asume que es un mapa. Por ejemplo: { "2025-06-03T08:30:00.000Z": "Camilo Armando Maita" }
-      let resultArr: string[] = [];
-      for (const [timeStr, name] of Object.entries(value)) {
-        const date = new Date(timeStr);
-        let formattedTime: string;
-        if (isNaN(date.getTime())) {
-          formattedTime = timeStr; // En caso de que no se convierta
-        } else {
-          formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-        resultArr.push(`${formattedTime} - ${name}`);
-      }
-      return resultArr.join(', ');
-    }
-    return value;
-  }
-
-  /**
    * Convierte un valor de fecha (Firestore Timestamp o string) al formato "yyyy-MM-ddTHH:mm"
-   * para inputs de tipo datetime-local.
+   * usado en inputs 'datetime-local'
    */
   private formatDateForInput(dateValue: any): string {
     let date: Date;
@@ -106,6 +88,9 @@ export class UpdateEventDialogComponent implements OnInit {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
+  /**
+   * Valida que horaInicio sea menor que horaFin.
+   */
   checkDates(group: AbstractControl): ValidationErrors | null {
     const inicio = group.get('horaInicio')?.value;
     const fin = group.get('horaFin')?.value;
@@ -115,6 +100,9 @@ export class UpdateEventDialogComponent implements OnInit {
     return null;
   }
 
+  /**
+   * Calcula los intervalos (slots) de 30 minutos entre horaInicio y horaFin.
+   */
   updateAvailableSlots(): void {
     const inicio = this.eventForm.get('horaInicio')?.value;
     const fin = this.eventForm.get('horaFin')?.value;
@@ -122,11 +110,10 @@ export class UpdateEventDialogComponent implements OnInit {
       const startDate = new Date(inicio);
       const endDate = new Date(fin);
       let slots: string[] = [];
-      const stepMinutes = 30;
       let current = new Date(startDate);
       while (current < endDate) {
         slots.push(current.toISOString());
-        current.setMinutes(current.getMinutes() + stepMinutes);
+        current.setMinutes(current.getMinutes() + 30);
       }
       this.availableSlots = slots;
     } else {
@@ -134,27 +121,27 @@ export class UpdateEventDialogComponent implements OnInit {
     }
   }
 
+  /**
+   * Se suscribe al documento del evento en Firestore para obtener los datos actuales.
+   */
   getEventById(): void {
-    const eventId = this.data.id;
-    this.http.get<any>(this.apiEndpoints.getEventoByIdEndpoint(eventId)).subscribe(
-      data => {
-        const reservaValue = this.parseReserva(data.reserva || data.citasReservadas);
+    const eventDocRef = doc(this.firestore, 'eventos', this.data.id);
+    docData(eventDocRef, { idField: 'id' }).subscribe(
+      (data: any) => {
         const fetchedData = {
           id: data.id,
           codigo: data.codigo || data.title || '',
           descripcion: data.descripcion || '',
           horaInicio: data.horaInicio ? this.formatDateForInput(data.horaInicio) : '',
           horaFin: data.horaFin ? this.formatDateForInput(data.horaFin) : '',
-          reserva: reservaValue,
           horasDisponibles: data.horasDisponibles || [],
           etiqueta: data.etiqueta || '',
-          creadorId: data.creadorId || ''
+          creadorId: data.creadorId || '',
+          reserva: data.reserva || null
         };
         this.eventForm.patchValue(fetchedData);
       },
-      error => {
-        console.error('Error al obtener el evento por id', error);
-      }
+      error => console.error('Error al obtener el evento:', error)
     );
   }
 
@@ -171,10 +158,29 @@ export class UpdateEventDialogComponent implements OnInit {
     this.eventForm.disable();
   }
 
+  /**
+   * Al enviar el formulario, convierte horaInicio y horaFin de string a objetos Date para actualizar Firestore.
+   * Además, elimina la propiedad "id" del objeto de actualización.
+   */
   onSubmit(): void {
     if (this.eventForm.valid) {
       const formValue = this.eventForm.getRawValue();
-      this.dialogRef.close(formValue);
+      const updateData = {
+        ...formValue,
+        horaInicio: new Date(formValue.horaInicio),
+        horaFin: new Date(formValue.horaFin)
+      };
+      const { id, ...dataToUpdate } = updateData;
+      const eventDocRef = doc(this.firestore, 'eventos', id);
+      updateDoc(eventDocRef, dataToUpdate)
+        .then(() => {
+          this.snackBar.open('Evento actualizado exitosamente', 'Cerrar', { duration: 3000 });
+          this.dialogRef.close(updateData);
+        })
+        .catch(err => {
+          this.snackBar.open('Error al actualizar el evento: ' + err, 'Cerrar', { duration: 3000 });
+          console.error('Error al actualizar el evento:', err);
+        });
     }
   }
 
@@ -188,15 +194,23 @@ export class UpdateEventDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  // Método para copiar el ID al portapapeles.
+  /**
+   * Copia el ID del evento al portapapeles.
+   */
   copyId(id: string): void {
     navigator.clipboard.writeText(id)
-      .then(() => console.log('ID copiado'))
-      .catch(err => console.error('Error al copiar el ID', err));
+      .then(() => {
+        this.snackBar.open('ID copiado', 'Cerrar', { duration: 2000 });
+      })
+      .catch(err => {
+        this.snackBar.open('Error al copiar el ID', 'Cerrar', { duration: 2000 });
+        console.error('Error al copiar el ID:', err);
+      });
   }
 
-  // Propiedad computada para mostrar la reserva formateada.
-  // Si la reserva es un objeto Date, se formatea a hora; si ya es un string (con hora y nombre), se devuelve tal cual.
+  /**
+   * Getter para mostrar la reserva de forma formateada en el template.
+   */
   get reservaDisplay(): string {
     const reserva = this.eventForm.get('reserva')?.value;
     if (reserva instanceof Date) {

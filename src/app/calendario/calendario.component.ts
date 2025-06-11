@@ -1,18 +1,15 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, OnDestroy, ViewChild } from '@angular/core';
 import { CalendarOptions, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { FullCalendarModule } from '@fullcalendar/angular';
+import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
 import { CommonModule } from '@angular/common';
 import {
   Firestore,
   collection,
   collectionData,
   doc as firestoreDoc,
-  docData,
-  updateDoc,
-  deleteDoc,
-  doc
+  docData
 } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { Auth, authState } from '@angular/fire/auth';
@@ -31,11 +28,13 @@ interface Badge {
   templateUrl: './calendario.component.html',
   styleUrls: ['./calendario.component.css']
 })
-export class CalendarioComponent implements OnInit {
+export class CalendarioComponent implements OnInit, OnDestroy {
+  @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
+
   currentUserId: string = '';
   currentUserName: string = '';
 
-  // Opciones de FullCalendar. Usamos eventContent con domNodes para crear el contenido usando nuestros nodos DOM.
+  // Opciones de FullCalendar  
   calendarOptions: CalendarOptions = {
     initialView: 'dayGridMonth',
     height: 800,
@@ -46,7 +45,7 @@ export class CalendarioComponent implements OnInit {
       center: 'title',
       right: 'dayGridMonth,dayGridWeek,dayGridDay'
     },
-    // Genera el contenido del evento a partir del array de badges
+    // Se genera el contenido del evento a partir de las badges
     eventContent: (arg) => {
       const badges: Badge[] = arg.event.extendedProps['badges'] || [];
       const badgesHtml = badges
@@ -70,8 +69,8 @@ export class CalendarioComponent implements OnInit {
       `;
       return { domNodes: [container] };
     },
-    // Con eventDidMount forzamos que cada badge tenga su color aplicado inline
     eventDidMount: (info) => {
+      // Forzar colores inline en cada badge tras renderizar el evento
       const badgeElements = info.el.querySelectorAll('.event-badge') as NodeListOf<HTMLElement>;
       badgeElements.forEach((badge) => {
         if (badge.classList.contains('host-badge')) {
@@ -85,13 +84,15 @@ export class CalendarioComponent implements OnInit {
     },
     eventClick: this.handleEventClick.bind(this),
     editable: true,
-    events: [] // Aquí se asignan los eventos posteriormente
+    events: [] // Se asignarán posteriormente
   };
 
   yourEvents: any[] = [];
   bookedEvents: any[] = [];
   selectedDate: Date | null = null;
   currentMonth: string = '';
+
+  private refreshIntervalId: any;
 
   constructor(
     private firestore: Firestore,
@@ -120,13 +121,22 @@ export class CalendarioComponent implements OnInit {
         }
       });
     });
+    // Recargar eventos cada 2 minutos (120000 ms)
+    this.refreshIntervalId = setInterval(() => {
+      this.fetchEvents();
+    }, 120000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshIntervalId) {
+      clearInterval(this.refreshIntervalId);
+    }
   }
 
   fetchEvents(): void {
     const eventosRef = collection(this.firestore, 'eventos');
     collectionData(eventosRef, { idField: 'id' }).subscribe((events: any[]) => {
       this.ngZone.run(() => {
-        // Convertir posibles Timestamps a Date y generar badges
         events.forEach(e => {
           if (e.horaInicio && typeof e.horaInicio === 'object' && e.horaInicio.seconds) {
             e.horaInicio = new Date(e.horaInicio.seconds * 1000);
@@ -146,7 +156,7 @@ export class CalendarioComponent implements OnInit {
           e.badges = badges;
         });
 
-        // Filtrar para listas inferiores y para el calendario
+        // Filtrar para listas inferiores
         this.yourEvents = events.filter(e => e.creadorId === this.currentUserName);
         this.bookedEvents = events.filter(e => e.creadorId !== this.currentUserName && this.hasUserReservation(e));
 
@@ -158,9 +168,7 @@ export class CalendarioComponent implements OnInit {
         };
 
         const calendarEvents: EventInput[] = events
-          .filter(e =>
-            e.creadorId === this.currentUserName || this.hasUserReservation(e)
-          )
+          .filter(e => e.creadorId === this.currentUserName || this.hasUserReservation(e))
           .map(e => {
             const etiquetaKey: string = e.etiqueta ? e.etiqueta.toLowerCase() : '';
             const etiquetaColor = etiquetaColors[etiquetaKey] || '#757575';
@@ -183,7 +191,15 @@ export class CalendarioComponent implements OnInit {
             };
           });
 
-        this.calendarOptions.events = calendarEvents;
+        // Asignar nueva referencia del array para forzar el re-render
+        this.calendarOptions.events = [...calendarEvents];
+
+        // Forzar actualización completa del calendario
+        if (this.calendarComponent) {
+          const calendarApi = this.calendarComponent.getApi();
+          calendarApi.removeAllEvents();
+          calendarApi.addEventSource([...calendarEvents]);
+        }
       });
     }, err => {
       console.error('Error al obtener eventos:', err);
@@ -215,48 +231,33 @@ export class CalendarioComponent implements OnInit {
   }
 
   viewEvent(event: any): void {
-    this.dialog.open(UpdateEventDialogComponent, {
+    const modalRef = this.dialog.open(UpdateEventDialogComponent, {
       data: { ...event.extendedProps, id: event.id, title: event.title, readOnly: true },
-      width: '700px'
+      width: '850px'
+    });
+    modalRef.afterClosed().subscribe(() => {
+      this.fetchEvents();
     });
   }
 
   editEvent(event: any): void {
-    if (
-      !event.extendedProps ||
-      event.extendedProps.creadorId === undefined ||
-      event.extendedProps['creadorId'] !== this.currentUserName
-    ) {
+    const creatorId = event.extendedProps ? event.extendedProps.creadorId : event.creadorId;
+    if (creatorId !== this.currentUserName) {
       console.error('No se permite editar este evento o la propiedad "creadorId" no existe.');
       this.viewEvent(event);
       return;
     }
-
     const eventId = event.id;
     if (!eventId) {
       console.error('No se encontró el ID del evento:', event);
       return;
     }
-
-    this.dialog.open(UpdateEventDialogComponent, {
+    const modalRef = this.dialog.open(UpdateEventDialogComponent, {
       data: { id: eventId, readOnly: false },
       width: '700px'
-    }).afterClosed().subscribe(updatedData => {
-      if (updatedData) {
-        if (updatedData.action && updatedData.action === 'delete') {
-          if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
-            const eventDocRef = doc(this.firestore, 'eventos', updatedData.id);
-            deleteDoc(eventDocRef)
-              .then(() => this.ngZone.run(() => this.fetchEvents()))
-              .catch(err => console.error('Error al eliminar el evento:', err));
-          }
-        } else {
-          const eventDocRef = doc(this.firestore, 'eventos', updatedData.id);
-          updateDoc(eventDocRef, updatedData)
-            .then(() => this.ngZone.run(() => this.fetchEvents()))
-            .catch(err => console.error('Error al actualizar el evento:', err));
-        }
-      }
+    });
+    modalRef.afterClosed().subscribe(() => {
+      this.fetchEvents();
     });
   }
 
