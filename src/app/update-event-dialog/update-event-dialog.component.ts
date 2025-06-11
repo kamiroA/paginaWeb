@@ -51,17 +51,20 @@ export class UpdateEventDialogComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {
     // Se agregó el control "reserva" para usarlo en el template (por ej. en un getter reservaDisplay).
-    this.eventForm = this.fb.group({
-      id: [{ value: '', disabled: true }],
-      codigo: [{ value: '', disabled: true }, Validators.required],
-      descripcion: [{ value: '', disabled: true }, Validators.required],
-      horaInicio: [{ value: '', disabled: true }, Validators.required],
-      horaFin: [{ value: '', disabled: true }, Validators.required],
-      horasDisponibles: [{ value: [], disabled: true }],
-      etiqueta: [{ value: '', disabled: true }, Validators.required],
-      creadorId: [{ value: '', disabled: true }],
-      reserva: [{ value: null, disabled: true }]
-    }, { validators: this.checkDates });
+    this.eventForm = this.fb.group(
+      {
+        id: [{ value: '', disabled: true }],
+        codigo: [{ value: '', disabled: true }, Validators.required],
+        descripcion: [{ value: '', disabled: true }, Validators.required],
+        horaInicio: [{ value: '', disabled: true }, Validators.required],
+        horaFin: [{ value: '', disabled: true }, Validators.required],
+        horasDisponibles: [{ value: [], disabled: true }],
+        etiqueta: [{ value: '', disabled: true }, Validators.required],
+        creadorId: [{ value: '', disabled: true }],
+        reserva: [{ value: null, disabled: true }]
+      },
+      { validators: this.checkDates }
+    );
   }
 
   ngOnInit(): void {
@@ -122,7 +125,26 @@ export class UpdateEventDialogComponent implements OnInit {
   }
 
   /**
+   * Procesa la reserva del usuario a partir del mapa 'citasReservadas'.
+   * Se asume que 'citasReservadas' es un objeto en el que las claves son
+   * fechas (en string) y los valores son el identificador del usuario (nombre o correo).
+   * Esta función formatea cada entrada para mostrar la hora de la reserva seguida del identificador.
+   */
+  getUserReservation(citasReservadas: any): string | null {
+    const keys = Object.keys(citasReservadas);
+    if (keys.length === 0) return null;
+    
+    const reservations = keys.map(key => {
+      const timeFormatted = new Date(key).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const identifier = citasReservadas[key]?.toString().trim();
+      return `${timeFormatted} - ${identifier}`;
+    });
+    return reservations.join(', ');
+  }
+
+  /**
    * Se suscribe al documento del evento en Firestore para obtener los datos actuales.
+   * Se intenta extraer el valor para 'reserva' ya sea directamente o a partir de 'citasReservadas'
    */
   getEventById(): void {
     const eventDocRef = doc(this.firestore, 'eventos', this.data.id);
@@ -137,7 +159,8 @@ export class UpdateEventDialogComponent implements OnInit {
           horasDisponibles: data.horasDisponibles || [],
           etiqueta: data.etiqueta || '',
           creadorId: data.creadorId || '',
-          reserva: data.reserva || null
+          // Si existe 'reserva' se usa, de lo contrario se intenta extraerla de 'citasReservadas'
+          reserva: data.reserva ? data.reserva : (data.citasReservadas ? this.getUserReservation(data.citasReservadas) : null)
         };
         this.eventForm.patchValue(fetchedData);
       },

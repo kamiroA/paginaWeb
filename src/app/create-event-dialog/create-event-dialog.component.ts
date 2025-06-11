@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
+import { finalize, take } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiEndpointsService } from '../api-endpoints.service';
 
@@ -50,7 +50,7 @@ export class CreateEventDialogComponent {
     private endpoints: ApiEndpointsService,
     private snackBar: MatSnackBar
   ) {
-    // Se configura el formulario con los validadores necesarios
+    // Configuración del formulario con validadores
     this.eventForm = this.fb.group({
       codigo: ['', Validators.required],
       descripcion: ['', Validators.required],
@@ -65,7 +65,7 @@ export class CreateEventDialogComponent {
   }
 
   /**
-   * Valida que la hora de inicio sea anterior a la hora de fin.
+   * Valida que la hora de inicio sea anterior a la de fin.
    */
   checkDates(group: AbstractControl): ValidationErrors | null {
     const inicio = group.get('horaInicio')?.value;
@@ -79,7 +79,7 @@ export class CreateEventDialogComponent {
   }
 
   /**
-   * Calcula los slots (intervalos de 30 minutos) entre la hora de inicio y la de fin.
+   * Calcula los slots (intervalos de 30 minutos) entre hora de inicio y fin.
    */
   updateAvailableSlots(): void {
     const inicio = this.eventForm.get('horaInicio')?.value;
@@ -108,37 +108,48 @@ export class CreateEventDialogComponent {
   }
 
   /**
-   * Envía el formulario y llama a la API para crear el evento, mostrando el loader hasta obtener la respuesta.
+   * Envía el formulario y llama a la API para crear el evento, mostrando el loader hasta obtener respuesta.
+   * Se utiliza un bloqueo (isLoading) y el operador take(1) para asegurar que solo se emite y se procesa una vez la solicitud.
    */
   onSubmit(): void {
-    if (this.eventForm.valid) {
-      this.isLoading = true;
-      const formValue = this.eventForm.value;
-      if (!formValue.horasDisponibles) {
-        formValue.horasDisponibles = [];
-      }
-      formValue.citasReservadas = {};
-      formValue.creadorId = this.data.currentUserName;
-
-      const createEventUrl = this.endpoints.eventosEndpoint;
-      
-      this.http.post(createEventUrl, formValue, { responseType: 'text' })
-        .pipe(finalize(() => { this.isLoading = false; }))
-        .subscribe({
-          next: (response: string) => {
-            this.snackBar.open('Evento creado con éxito.', 'Cerrar', {
-              duration: 3000,
-              panelClass: ['snackbar-success']
-            });
-            this.dialogRef.close(formValue);
-          },
-          error: (error) => {
-            this.snackBar.open('Error creando evento.', 'Cerrar', {
-              duration: 3000,
-              panelClass: ['snackbar-error']
-            });
-          }
-        });
+    // Si ya se está procesando la solicitud o el formulario no es válido, se evita el envío.
+    if (this.isLoading || !this.eventForm.valid) { 
+      return;
     }
+    
+    this.isLoading = true;
+    const formValue = this.eventForm.value;
+
+    if (!formValue.horasDisponibles) {
+      formValue.horasDisponibles = [];
+    }
+    // Se inicializa citasReservadas como objeto vacío
+    formValue.citasReservadas = {};
+    // Se asigna el nombre del creador (usando el nombre)
+    formValue.creadorId = this.data.currentUserName;
+
+    const createEventUrl = this.endpoints.eventosEndpoint;
+    
+    this.http.post(createEventUrl, formValue, { responseType: 'text' })
+      .pipe(
+        take(1),
+        finalize(() => { this.isLoading = false; })
+      )
+      .subscribe({
+        next: (response: string) => {
+          this.snackBar.open('Evento creado con éxito.', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['snackbar-success']
+          });
+          // Cerramos el diálogo con el valor creado
+          this.dialogRef.close(formValue);
+        },
+        error: (error) => {
+          this.snackBar.open('Error creando evento.', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['snackbar-error']
+          });
+        }
+      });
   }
 }

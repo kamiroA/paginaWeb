@@ -108,11 +108,7 @@ export class NavbarComponent implements OnInit {
     }
 
     const dialogRef = this.dialog.open(EditProfileComponent, {
-      width: '60vw',
-      minWidth: '600px',
-      maxWidth: '90vw',
-      height: '60vh',
-      minHeight: '400px'
+      
     });
 
     dialogRef.afterClosed().subscribe((result) => {

@@ -31,7 +31,7 @@ interface Badge {
 export class CalendarioComponent implements OnInit, OnDestroy {
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
-  currentUserId: string = '';
+  // Utilizaremos el nombre del usuario para comparar, por lo que eliminamos el UID de la comparación.
   currentUserName: string = '';
 
   // Opciones de FullCalendar  
@@ -45,7 +45,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       center: 'title',
       right: 'dayGridMonth,dayGridWeek,dayGridDay'
     },
-    // Se genera el contenido del evento a partir de las badges
+    // Se genera el contenido del evento a partir de sus badges.
     eventContent: (arg) => {
       const badges: Badge[] = arg.event.extendedProps['badges'] || [];
       const badgesHtml = badges
@@ -70,7 +70,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       return { domNodes: [container] };
     },
     eventDidMount: (info) => {
-      // Forzar colores inline en cada badge tras renderizar el evento
+      // Forzar colores inline en cada badge tras renderizar el evento.
       const badgeElements = info.el.querySelectorAll('.event-badge') as NodeListOf<HTMLElement>;
       badgeElements.forEach((badge) => {
         if (badge.classList.contains('host-badge')) {
@@ -84,7 +84,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     },
     eventClick: this.handleEventClick.bind(this),
     editable: true,
-    events: [] // Se asignarán posteriormente
+    events: [] // Se asignarán posteriormente.
   };
 
   yourEvents: any[] = [];
@@ -106,11 +106,13 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     authState(this.auth).subscribe(user => {
       this.ngZone.run(() => {
         if (user) {
-          this.currentUserId = user.uid;
+          // Se utiliza el displayName o, en su defecto, un valor por defecto.
+          this.currentUserName = user.displayName || 'Usuario';
           const userDocRef = firestoreDoc(this.firestore, 'usuarios', user.uid);
           docData(userDocRef, { idField: 'id' }).subscribe((data: any) => {
             this.ngZone.run(() => {
-              this.currentUserName = data?.name || user.displayName || 'Usuario';
+              // Se actualiza currentUserName con el nombre almacenado en el documento de usuario.
+              this.currentUserName = data?.name || this.currentUserName;
               const today = new Date();
               this.currentMonth = this.formatMonth(today);
               this.fetchEvents();
@@ -144,10 +146,12 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           if (e.horaFin && typeof e.horaFin === 'object' && e.horaFin.seconds) {
             e.horaFin = new Date(e.horaFin.seconds * 1000);
           }
+
+          // Se asignan las badges usando el nombre para establecer si es Host o Booked.
           const badges: Badge[] = [];
-          if (e.creadorId === this.currentUserName) {
+          if (e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()) {
             badges.push({ type: 'host', label: 'Host' });
-          } else {
+          } else if (this.hasUserReservation(e)) {
             badges.push({ type: 'booked', label: 'Booked' });
           }
           if (e.etiqueta) {
@@ -156,9 +160,16 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           e.badges = badges;
         });
 
-        // Filtrar para listas inferiores
-        this.yourEvents = events.filter(e => e.creadorId === this.currentUserName);
-        this.bookedEvents = events.filter(e => e.creadorId !== this.currentUserName && this.hasUserReservation(e));
+        // Filtrar eventos creados por el usuario (usando nombre) en "Your Events"
+        this.yourEvents = events.filter(e =>
+          e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()
+        );
+        // Filtrar eventos reservados: aquellos en los que el creador no coincide con el nombre del usuario y además se detecta la reserva.
+        this.bookedEvents = events.filter(e =>
+          e.creadorId &&
+          e.creadorId.trim().toLowerCase() !== this.currentUserName.trim().toLowerCase() &&
+          this.hasUserReservation(e)
+        );
 
         const etiquetaColors: { [key: string]: string } = {
           profesional: '#FF5722',
@@ -168,7 +179,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
         };
 
         const calendarEvents: EventInput[] = events
-          .filter(e => e.creadorId === this.currentUserName || this.hasUserReservation(e))
+          .filter(e =>
+            (e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()) ||
+            this.hasUserReservation(e)
+          )
           .map(e => {
             const etiquetaKey: string = e.etiqueta ? e.etiqueta.toLowerCase() : '';
             const etiquetaColor = etiquetaColors[etiquetaKey] || '#757575';
@@ -180,7 +194,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
               borderColor: etiquetaColor,
               extendedProps: {
                 description: e.descripcion,
-                role: e.creadorId === this.currentUserName ? 'Host' : 'Booked',
+                // Se define el rol según la comparación de nombres.
+                role: e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()
+                  ? 'Host'
+                  : 'Booked',
                 citasReservadas: e.citasReservadas,
                 etiqueta: e.etiqueta,
                 reserva: e.citasReservadas,
@@ -191,10 +208,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
             };
           });
 
-        // Asignar nueva referencia del array para forzar el re-render
+        // Asignar nueva referencia del arreglo para forzar el re-render.
         this.calendarOptions.events = [...calendarEvents];
 
-        // Forzar actualización completa del calendario
+        // Forzar actualización completa del calendario.
         if (this.calendarComponent) {
           const calendarApi = this.calendarComponent.getApi();
           calendarApi.removeAllEvents();
@@ -211,10 +228,16 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     return new Intl.DateTimeFormat('es-ES', options).format(date);
   }
 
+  /**
+   * Función hasUserReservation actualizada para comparar únicamente con el nombre del usuario.
+   */
   hasUserReservation(event: any): boolean {
     if (!event.citasReservadas) return false;
+    const currentName = this.currentUserName?.trim().toLowerCase();
     for (const key in event.citasReservadas) {
-      if (event.citasReservadas[key] === this.currentUserName) {
+      const reservation = event.citasReservadas[key]?.toString().trim().toLowerCase();
+      console.log(`Comparando reserva: ${reservation} con ${currentName}`);
+      if (reservation === currentName) {
         return true;
       }
     }
@@ -242,8 +265,9 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   editEvent(event: any): void {
     const creatorId = event.extendedProps ? event.extendedProps.creadorId : event.creadorId;
-    if (creatorId !== this.currentUserName) {
-      console.error('No se permite editar este evento o la propiedad "creadorId" no existe.');
+    // Comparación usando el nombre
+    if (!creatorId || creatorId.trim().toLowerCase() !== this.currentUserName.trim().toLowerCase()) {
+      console.error('No se permite editar este evento. El creador no coincide.');
       this.viewEvent(event);
       return;
     }
