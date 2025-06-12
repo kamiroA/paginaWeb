@@ -5,7 +5,7 @@
   padding: 24px;
   max-width: 600px;
   box-sizing: border-box;
-  background-color: #fff;
+  background-color: #FFFFFFFF; /* white */
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   animation: scaleIn 0.3s ease-in-out;
@@ -16,7 +16,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #A9A7A5A4; /* gray_list */
   padding-bottom: 8px;
   margin-bottom: 16px;
 }
@@ -25,19 +25,19 @@
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: #3f51b5;
+  color: #2563eb;  /* mainBlue */
 }
 
 .close-button {
-  color: #999;
+  color: #757575;
   transition: color 0.3s ease;
 }
 
 .close-button:hover {
-  color: #3f51b5;
+  color: #2563eb; /* mainBlue */
 }
 
-/* Contenedor para distribuir en dos columnas */
+/* Distribución en dos columnas */
 .two-column-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -45,7 +45,7 @@
   margin-bottom: 20px;
 }
 
-/* Campos que deben ocupar el ancho completo */
+/* Campo de ancho completo */
 .full-width {
   width: 100%;
   margin-bottom: 20px;
@@ -64,28 +64,98 @@ mat-dialog-content {
   box-sizing: border-box;
 }
 
-/* Personalización del panel del mat-select */
+/* Panel del mat-select (mantiene estilo similar) */
 .mat-select-panel {
   transform-origin: top center !important;
   max-height: 300px !important;
   overflow-y: auto !important;
-  background-color: #fff !important;
-  border: 1px solid rgba(0,0,0,0.12);
+  background-color: #FFFFFFFF !important; /* white */
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .mat-option:hover {
-  background-color: rgba(63, 81, 181, 0.1) !important;
+  background-color: rgba(37, 99, 235, 0.1) !important; /* mainBlue con baja opacidad */
 }
 
-/* Estilo para las acciones del diálogo */
+/* Selector de Horas Disponibles con Chip-list */
+.selection-panel {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #A9A7A5A4; /* gray_list */
+  border-radius: 8px;
+  background-color: #FBF7F7; /* blank_background */
+}
+
+.selection-panel h3 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #2563eb; /* mainBlue */
+  margin-bottom: 12px;
+}
+
+.selection-chip-listbox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Estilo de los chips */
+.mat-chip-option {
+  border-radius: 4px;
+  padding: 4px 8px;
+  background-color: #FFFFFFFF;
+  border: 1px solid #A9A7A5A4;
+  color: #2563eb; /* mainBlue */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.mat-chip-option.mat-chip-selected {
+  background-color: #2563eb;
+  color: #FFFFFFFF;
+}
+
+/* Acciones del diálogo */
 mat-dialog-actions {
   display: flex;
   justify-content: flex-end;
   padding: 12px 0 0;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid #A9A7A5A4;
   margin-top: 16px;
+}
+
+/* Botones de acción — se asemejan a los botones del navbar */
+.dialog-action-button {
+  border: none;
+  border-radius: 30px;
+  padding: 10px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 8px;
+}
+
+/* Botón de acción principal (similar a busqueda/create-event button) */
+.dialog-action-button.primary {
+  background: linear-gradient(135deg, #2196f3, #21cbf3);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+.dialog-action-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+}
+
+/* Botón de cancelar/eliminar en rojo */
+.dialog-action-button.cancel {
+  background: linear-gradient(135deg, #f44336, #e57373);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+.dialog-action-button.cancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
 }
 
 /* Overlay del Loader */

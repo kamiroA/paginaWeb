@@ -5,6 +5,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f0f2f5;
+  position: relative;
 }
 
 /* Fondo animado */
@@ -33,7 +34,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f0f2f5;
+  background-color: #f0f2f5;
   position: relative;
   padding: 20px;
   z-index: 1;
@@ -44,18 +45,20 @@ body {
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 2;
 }
 
-/* Tarjeta con glassmorphism */
+/* Tarjeta con efecto glassmorphism y gradiente suave */
 .register-card {
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 40px 30px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  color: #000000;
   border: 1px solid rgba(255, 255, 255, 0.18);
   transition: transform 0.3s ease;
+  color: #000000;
 }
 
 .register-card:hover {
@@ -68,6 +71,7 @@ body {
   margin-bottom: 1.5rem;
   text-align: center;
   color: #000000;
+  font-weight: 600;
 }
 
 /* Inputs */
@@ -79,15 +83,16 @@ body {
   width: 100%;
   padding: 0.75rem;
   border-radius: 6px;
-  border: none;
+  border: 1px solid #A9A7A5A4;
   font-size: 1rem;
   box-sizing: border-box;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .register-input:focus {
   outline: none;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+  border-color: #2563eb;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.4);
 }
 
 /* Errores */
@@ -105,19 +110,19 @@ body {
   font-size: 1rem;
   border: none;
   border-radius: 6px;
-  background-color: #007bff;
-  color: white;
+  background-color: #2563eb;
+  color: #ffffff;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
 }
 
 .register-button:hover {
-  background-color: #0056b3;
+  background-color: #1f4eb3;
   transform: scale(1.02);
 }
 
 .register-button:disabled {
-  background-color: #888;
+  background-color: #888888;
   cursor: not-allowed;
 }
 
@@ -138,7 +143,7 @@ body {
 }
 
 .login-link a {
-  color: #007bff;
+  color: #2563eb;
   text-decoration: none;
 }
 
@@ -151,11 +156,11 @@ body {
   .register-card {
     padding: 30px 20px;
   }
-
+  
   .register-title {
     font-size: 1.6rem;
   }
-
+  
   .register-button {
     font-size: 0.95rem;
   }

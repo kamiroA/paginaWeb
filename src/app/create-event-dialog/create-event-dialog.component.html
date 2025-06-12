@@ -4,6 +4,7 @@
     <mat-icon>close</mat-icon>
   </button>
 </div>
+
 <mat-dialog-content>
   <form [formGroup]="eventForm">
     <!-- Fila 1: Nombre del Evento y Etiqueta -->
@@ -61,21 +62,24 @@
       </mat-form-field>
     </div>
     
-    <!-- Fila 4: Horas Disponibles -->
-    <mat-form-field *ngIf="availableSlots.length > 0" appearance="fill" class="full-width">
-      <mat-label>Horas Disponibles</mat-label>
-      <mat-select formControlName="horasDisponibles" multiple>
-        <mat-option *ngFor="let slot of availableSlots" [value]="slot">
+    <!-- Fila 4: Selector de Horas Disponibles (Chip-list) -->
+    <div class="selection-panel" *ngIf="availableSlots.length > 0">
+      <h3>Selecciona las horas disponibles</h3>
+      <mat-chip-listbox multiple class="selection-chip-listbox">
+        <mat-chip-option 
+          *ngFor="let slot of availableSlots" 
+          (click)="toggleSelection(slot)"
+          [selected]="selectedHoras.includes(slot)">
           {{ slot | date:'shortTime' }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+        </mat-chip-option>
+      </mat-chip-listbox>
+    </div>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancelar</button>
-  <button mat-button color="primary" (click)="onSubmit()" [disabled]="isLoading">
+  <button mat-button class="dialog-action-button cancel" (click)="onCancel()">Cancelar</button>
+  <button mat-button class="dialog-action-button primary" (click)="onSubmit()" [disabled]="isLoading">
     Crear
   </button>
 </mat-dialog-actions>

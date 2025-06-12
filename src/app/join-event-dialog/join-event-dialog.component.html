@@ -3,40 +3,47 @@
 </div>
 
 <mat-dialog-content class="dialog-content">
-  <div class="event-details">
-    <p><strong>Nombre:</strong> {{ data.event.codigo }}</p>
-    <p><strong>Descripción:</strong> {{ data.event.descripcion }}</p>
-    <p><strong>Inicio:</strong> {{ data.event.horaInicio | date:'short' }}</p>
-    <p><strong>Fin:</strong> {{ data.event.horaFin | date:'short' }}</p>
-  </div>
-  
-  <!-- Selector de horas disponibles -->
-  <mat-form-field appearance="fill" class="full-width time-selector">
-    <mat-label>Selecciona una hora disponible</mat-label>
-    <mat-select [formControl]="horaControl" multiple>
-      <mat-option *ngFor="let hora of availableHours" [value]="hora">
-        {{ hora | date:'shortTime' }}
-      </mat-option>
-    </mat-select>
-    <mat-error *ngIf="horaControl.hasError('required')">
-      Selecciona una hora
-    </mat-error>
-  </mat-form-field>
-
-  <!-- Reservas existentes -->
-  <div *ngIf="reservedAppointments && reservedAppointments.length > 0" class="reservations">
-    <h3>Reservas existentes:</h3>
-    <ul>
-      <li *ngFor="let reserva of reservedAppointments">
-        <strong>Hora:</strong> {{ reserva.hora | date:'shortTime' }}
-        &nbsp;-&nbsp;
-        <strong>Reservado por:</strong> {{ reserva.reservadoPor }}
-      </li>
-    </ul>
+  <div class="dialog-container">
+    <!-- Panel Izquierdo: Detalles del Evento -->
+    <div class="left-panel">
+      <h3>Detalles del Evento</h3>
+      <p><strong>Nombre:</strong> {{ data.event.codigo }}</p>
+      <p><strong>Descripción:</strong> {{ data.event.descripcion }}</p>
+      <p><strong>Inicio:</strong> {{ data.event.horaInicio | date:'short' }}</p>
+      <p><strong>Fin:</strong> {{ data.event.horaFin | date:'short' }}</p>
+    </div>
+    
+    <!-- Panel Derecho: Reservas y Selector de Horas -->
+    <div class="right-panel">
+      <!-- Reservas Existentes -->
+      <div class="reservations-panel">
+        <h3>Reservas existentes</h3>
+        <mat-chip-listbox disabled class="reservations-chips">
+          <mat-chip-option *ngFor="let reserva of reservedAppointments" disabled>
+            {{ reserva.hora | date:'shortTime' }} - {{ reserva.reservadoPor }}
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+      
+      <!-- Selector de Horas Disponibles (multiselección) -->
+      <div class="selection-panel">
+        <h3>Selecciona las horas disponibles</h3>
+        <mat-chip-listbox multiple class="selection-chip-listbox">
+          <mat-chip-option 
+            *ngFor="let hora of availableHours" 
+            (click)="toggleSelection(hora)"
+            [selected]="selectedHoras.includes(hora)">
+            {{ hora | date:'shortTime' }}
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+    </div>
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancelar</button>
-  <button mat-button color="primary" [disabled]="horaControl.invalid" (click)="joinEvent()">Unirse al Evento</button>
+  <button mat-button color="primary" [disabled]="selectedHoras.length === 0" (click)="joinEvent()">
+    Unirse al Evento
+  </button>
 </mat-dialog-actions>

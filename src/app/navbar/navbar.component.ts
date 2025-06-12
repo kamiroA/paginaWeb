@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
+import { collection, query, where, getDocs } from '@angular/fire/firestore';
 
 import { Auth, onAuthStateChanged, signOut } from '@angular/fire/auth';
 import { Firestore, doc, docData } from '@angular/fire/firestore';
@@ -101,25 +102,27 @@ export class NavbarComponent implements OnInit {
     });
   }
 
-  openEditProfileDialog(): void {
-    if (!this.isLogged) {
-      this.goToLogin();
-      return;
-    }
-
-    const dialogRef = this.dialog.open(EditProfileComponent, {
-      
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.snackBar.open('Perfil actualizado.', 'Cerrar', {
-          duration: 3000,
-          panelClass: ['snackbar-info']
-        });
-      }
-    });
+ openEditProfileDialog(): void {
+  if (!this.isLogged) {
+    this.goToLogin();
+    return;
   }
+
+  const dialogRef = this.dialog.open(EditProfileComponent, {
+    width: '1200px',    
+    maxWidth: '90vw',      
+     
+  });
+
+  dialogRef.afterClosed().subscribe((result) => {
+    if (result) {
+      this.snackBar.open('Perfil actualizado.', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['snackbar-info']
+      });
+    }
+  });
+}
 
   goToLogin(): void {
     this.router.navigate(['/login']);
@@ -147,38 +150,100 @@ export class NavbarComponent implements OnInit {
       });
   }
 
-  searchEvent(): void {
-    const eventId = this.eventQuery.trim();
-    if (!eventId) {
-      this.snackBar.open('Por favor ingresa un ID de evento.', 'Cerrar', {
-        duration: 3000,
-        panelClass: ['snackbar-warning']
-      });
-      return;
-    }
+searchEvent(): void {
+  const queryStr = this.eventQuery.trim().toLowerCase();
+  if (!queryStr) {
+    this.snackBar.open('Por favor ingresa un ID o nombre de evento.', 'Cerrar', {
+      duration: 3000,
+      panelClass: ['snackbar-warning']
+    });
+    return;
+  }
 
-    const searchUrl = this.endpoints.getEventoByIdEndpoint(eventId);
-    this.http.get<any>(searchUrl).subscribe({
-      next: (data) => {
-        if (data) {
-          if (!data.id) data.id = eventId;
-          this.dialog.open(JoinEventDialogComponent, {
-            width: '400px',
-            data: { event: data, currentUser: this.userName }
-          });
+  // Obtenemos todos los eventos mediante el endpoint de lista
+  const url = this.endpoints.eventosEndpoint;
+  this.http.get<any[]>(url).subscribe({
+    next: (events) => {
+      if (events && events.length > 0) {
+        // Filtramos por:
+        // 1. Que el campo "id" sea exactamente igual a la consulta
+        // 2. O que el campo "codigo" (nombre) contenga la cadena buscada
+        const eventsFound = events.filter(e =>
+          (e.id && e.id.toString().toLowerCase() === queryStr) ||
+          (e.codigo && e.codigo.toLowerCase().includes(queryStr))
+        );
+
+        if (eventsFound.length > 0) {
+          // Ordenamos según el índice en el que aparece la cadena en "codigo"
+          if (eventsFound.length > 1) {
+            eventsFound.sort((a, b) => {
+              const idxA = a.codigo ? a.codigo.toLowerCase().indexOf(queryStr) : Number.MAX_VALUE;
+              const idxB = b.codigo ? b.codigo.toLowerCase().indexOf(queryStr) : Number.MAX_VALUE;
+              return idxA - idxB;
+            });
+          }
+
+          const eventData = eventsFound[0];
+          
+          // Si el evento no tiene definido el id, realizamos una consulta a Firestore
+          if (!eventData.id) {
+            const eventosRef = collection(this.firestore, 'eventos');
+            const q = query(eventosRef, where('codigo', '==', eventData.codigo));
+            getDocs(q)
+              .then(snapshot => {
+                if (!snapshot.empty) {
+                  // Asignamos el id real obtenido desde Firestore
+                  eventData.id = snapshot.docs[0].id;
+                  // Abrimos el diálogo de unión al evento con el id correcto
+                  this.dialog.open(JoinEventDialogComponent, {
+                    width: '80%',       
+                   maxWidth: '1200px',
+                    data: { event: eventData, currentUser: this.userName }
+                  });
+                } else {
+                  this.snackBar.open('Evento no encontrado en Firestore.', 'Cerrar', {
+                    duration: 3000,
+                    panelClass: ['snackbar-warning']
+                  });
+                }
+              })
+              .catch((error) => {
+                console.error('Error al obtener el ID desde Firestore:', error);
+                this.snackBar.open('Error al obtener el ID del evento.', 'Cerrar', {
+                  duration: 3000,
+                  panelClass: ['snackbar-error']
+                });
+              });
+          } else {
+            // Si ya existe el id, abrimos directamente el diálogo
+            this.dialog.open(JoinEventDialogComponent, {
+               width: '80%',       
+               maxWidth: '1200px',
+              data: { event: eventData, currentUser: this.userName }
+            });
+          }
         } else {
           this.snackBar.open('Evento no encontrado.', 'Cerrar', {
             duration: 3000,
             panelClass: ['snackbar-warning']
           });
         }
-      },
-      error: (err) => {
-        this.snackBar.open('Error al buscar el evento.', 'Cerrar', {
-          duration: 1500,
-          panelClass: ['snackbar-error']
+      } else {
+        this.snackBar.open('No hay eventos registrados.', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['snackbar-warning']
         });
       }
-    });
-  }
+    },
+    error: (err) => {
+      this.snackBar.open('Error al obtener los eventos.', 'Cerrar', {
+        duration: 1500,
+        panelClass: ['snackbar-error']
+      });
+    }
+  });
+}
+
+
+
 }

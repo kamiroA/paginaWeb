@@ -1,0 +1,31 @@
+body {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  /* Si deseas quitar el background por defecto */
+  background: transparent;
+  overflow-x: hidden;
+}
+
+/* Pseudo-elemento para el fondo con gradiente y desenfoque */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Gradiente personalizado: ajusta los colores según prefieras */
+  background: linear-gradient(135deg, #2563eb, #5CC230);
+  z-index: -1;
+  filter: blur(8px);
+  /* Opcional: disminuir opacidad para un efecto más sutil */
+  opacity: 0.85;
+}
+
+/* Aseguramos que los componentes se posicionen sobre el fondo */
+app-navbar,
+app-calendario {
+  position: relative;
+  z-index: 1;
+}

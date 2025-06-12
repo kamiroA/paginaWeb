@@ -1,16 +1,27 @@
-// src/app/edit-perfil/edit-perfil.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Auth, onAuthStateChanged, updatePassword } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, docData } from '@angular/fire/firestore';
+import {
+  Firestore,
+  doc,
+  setDoc,
+  docData,
+  collection,
+  query,
+  where,
+  getDocs,
+  writeBatch
+} from '@angular/fire/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-edit-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatCardModule],
   templateUrl: './edit-perfil.component.html',
   styleUrls: ['./edit-perfil.component.css']
 })
@@ -20,8 +31,13 @@ export class EditProfileComponent implements OnInit {
   name: string = '';
   email: string = '';
   info: string = '';
-  
-  // Propiedad para la foto de perfil, con valor por defecto
+
+  // Copias para restaurar si se cancela la edición
+  originalName: string = '';
+  originalEmail: string = '';
+  originalInfo: string = '';
+
+  // Foto de perfil
   profileImage: string = 'DefaultPF.png';
 
   // Campos de contraseña
@@ -29,127 +45,201 @@ export class EditProfileComponent implements OnInit {
   newPassword: string = '';
   confirmPassword: string = '';
 
-  // Flags para edición
-  editName: boolean = false;
-  editEmail: boolean = false;
-  editInfo: boolean = false;
+  // Flag para modo edición global
+  isEditing: boolean = false;
+
+  // Flag para detectar si el usuario inició sesión con Google
+  isGoogleUser: boolean = false;
+
+  // Flag para mostrar/ocultar la sección de cambio de contraseña
   showPasswordFields: boolean = false;
 
-  // Inyectar la nueva API de Firebase
+  // Inyección de Firebase y Snackbar
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
+  private snackBar: MatSnackBar = inject(MatSnackBar);
 
   constructor(private dialogRef: MatDialogRef<EditProfileComponent>) {}
 
   ngOnInit(): void {
-    // Escucha el estado de autenticación para cargar los datos del usuario
     onAuthStateChanged(this.auth, (user) => {
       if (user) {
         this.uid = user.uid;
         this.email = user.email || '';
+        // Determinar si el usuario inició sesión con Google
+        this.isGoogleUser = (user.providerData || []).some(p => p.providerId === 'google.com');
         const userDocRef = doc(this.firestore, "usuarios", this.uid);
         docData(userDocRef, { idField: 'id' }).subscribe((data: any) => {
           this.name = data?.name || '';
           this.info = data?.opcInfo || '';
           this.profileImage = data?.fotoPerfil || this.profileImage;
+          // Guardar los valores originales para poder revertirlos si se cancela
+          this.originalName = this.name;
+          this.originalEmail = this.email;
+          this.originalInfo = this.info;
         });
       }
     });
   }
 
-  // Método para manejar la subida de imagen
+  /**
+   * Activa el modo edición global.
+   */
+  toggleEdit(): void {
+    if (!this.isEditing) {
+      // Guarda los valores actuales para poder restaurarlos
+      this.originalName = this.name;
+      this.originalEmail = this.email;
+      this.originalInfo = this.info;
+      this.isEditing = true;
+    }
+  }
+
+  /**
+   * Guarda los cambios realizados en los campos editables y actualiza Firestore.
+   * Además, si el nombre ha cambiado, actualiza la colección "eventos" donde aparece.
+   */
+  async saveProfile(): Promise<void> {
+    const profileData: any = {
+      name: this.name,
+      opcInfo: this.info
+    };
+    const userDocRef = doc(this.firestore, "usuarios", this.uid);
+    try {
+      await setDoc(userDocRef, profileData, { merge: true });
+      // Si el nombre ha cambiado, actualizamos los eventos:
+      if (this.name !== this.originalName) {
+        await this.updateEventsName(this.originalName, this.name);
+      }
+      this.snackBar.open('Perfil actualizado correctamente.', 'Cerrar', { duration: 3000 });
+      this.isEditing = false;
+    } catch (err: any) {
+      this.snackBar.open('Error actualizando el perfil: ' + err.message, 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  /**
+   * Actualiza el campo "creadorId" y, si existe, el campo "citasReservadas"
+   * en todos los documentos de la colección "eventos" que tengan el nombre antiguo,
+   * reemplazándolo por el nuevo.
+   */
+  private async updateEventsName(oldName: string, newName: string): Promise<void> {
+    try {
+      const eventosRef = collection(this.firestore, "eventos");
+      const q = query(eventosRef, where("creadorId", "==", oldName));
+      const querySnapshot = await getDocs(q);
+      console.log(`Se encontraron ${querySnapshot.size} eventos con creadorId === ${oldName}`);
+      
+      if (!querySnapshot.empty) {
+        const batch = writeBatch(this.firestore);
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const updateData: any = { creadorId: newName };
+          // Se revisa citasReservadas usando acceso con corchetes
+          if (data['citasReservadas'] && typeof data['citasReservadas'] === "object") {
+            const updatedReservations: any = { ...data['citasReservadas'] };
+            let updated = false;
+            Object.keys(updatedReservations).forEach(key => {
+              if (updatedReservations[key] === oldName) {
+                updatedReservations[key] = newName;
+                updated = true;
+              }
+            });
+            if (updated) {
+              updateData['citasReservadas'] = updatedReservations;
+            }
+          }
+          console.log(`Actualizando evento ${docSnap.id} con datos:`, updateData);
+          batch.update(docSnap.ref, updateData);
+        });
+        await batch.commit();
+        console.log("Eventos actualizados exitosamente.");
+      } else {
+        console.log("No se encontraron eventos para actualizar.");
+      }
+    } catch (error) {
+      console.error("Error actualizando eventos: ", error);
+    }
+  }
+
+  /**
+   * Cancela la edición y restaura los valores originales.
+   */
+  cancelEdit(): void {
+    this.name = this.originalName;
+    this.email = this.originalEmail;
+    this.info = this.originalInfo;
+    this.isEditing = false;
+  }
+
+  /**
+   * Sube una nueva imagen de perfil y actualiza Firestore.
+   */
   uploadFile(event: any): void {
     const file: File = event.target.files[0];
     if (!file) return;
-    
     const filePath = `fotosPerfil/${this.uid}_${file.name}`;
     const storageRef = ref(getStorage(), filePath);
     
     uploadBytes(storageRef, file)
-      .then((snapshot) => {
-        return getDownloadURL(storageRef);
-      })
+      .then(() => getDownloadURL(storageRef))
       .then((downloadUrl) => {
         const userDocRef = doc(this.firestore, "usuarios", this.uid);
         return setDoc(userDocRef, { fotoPerfil: downloadUrl }, { merge: true })
           .then(() => {
             this.profileImage = downloadUrl;
-            alert('Foto de perfil actualizada correctamente.');
+            this.snackBar.open('Foto de perfil actualizada correctamente.', 'Cerrar', { duration: 3000 });
           });
       })
       .catch((error) => {
         console.error('Error subiendo la imagen:', error);
-        alert('Error subiendo la imagen.');
+        this.snackBar.open('Error subiendo la imagen.', 'Cerrar', { duration: 3000 });
       });
   }
 
-  toggleEdit(field: string): void {
-    switch (field) {
-      case 'name':
-        if (this.editName) {
-          this.saveProfile();
-        }
-        this.editName = !this.editName;
-        break;
-      case 'email':
-        this.editEmail = !this.editEmail;
-        break;
-      case 'info':
-        if (this.editInfo) {
-          this.saveProfile();
-        }
-        this.editInfo = !this.editInfo;
-        break;
-    }
-  }
-
+  /**
+   * Alterna la visualización de cambio de contraseña.
+   */
   togglePasswordFields(): void {
     this.showPasswordFields = !this.showPasswordFields;
   }
 
+  /**
+   * Valida que la nueva contraseña tenga al menos 8 caracteres y que coincida con la confirmación.
+   */
   isPasswordValid(): boolean {
     return this.newPassword.length >= 8 && this.newPassword === this.confirmPassword;
   }
 
+  /**
+   * Actualiza la contraseña del usuario.
+   */
   savePassword(): void {
     if (this.isPasswordValid()) {
       const user = this.auth.currentUser;
       if (user) {
         updatePassword(user, this.newPassword)
           .then(() => {
-            alert('Contraseña actualizada correctamente.');
+            this.snackBar.open('Contraseña actualizada correctamente.', 'Cerrar', { duration: 3000 });
             this.oldPassword = '';
             this.newPassword = '';
             this.confirmPassword = '';
             this.showPasswordFields = false;
           })
           .catch(err => {
-            alert('Error actualizando la contraseña: ' + err.message);
+            this.snackBar.open('Error actualizando la contraseña: ' + err.message, 'Cerrar', { duration: 3000 });
           });
       } else {
-        alert('No se encontró el usuario.');
+        this.snackBar.open('No se encontró el usuario.', 'Cerrar', { duration: 3000 });
       }
     } else {
-      alert('Verifica que la nueva contraseña cumpla los requisitos y que coincidan los valores.');
+      this.snackBar.open('Verifica que la nueva contraseña cumpla los requisitos y que coincidan los valores.', 'Cerrar', { duration: 3000 });
     }
   }
 
-  saveProfile(): void {
-    const profileData = {
-      name: this.name,
-      opcInfo: this.info
-    };
-
-    const userDocRef = doc(this.firestore, "usuarios", this.uid);
-    setDoc(userDocRef, profileData, { merge: true })
-      .then(() => {
-        alert('Perfil actualizado correctamente.');
-      })
-      .catch(err => {
-        alert('Error actualizando el perfil: ' + err.message);
-      });
-  }
-
+  /**
+   * Cierra el diálogo.
+   */
   onCancel(): void {
     this.dialogRef.close();
   }

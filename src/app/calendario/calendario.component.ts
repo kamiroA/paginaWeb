@@ -31,7 +31,7 @@ interface Badge {
 export class CalendarioComponent implements OnInit, OnDestroy {
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
-  // Utilizaremos el nombre del usuario para comparar, por lo que eliminamos el UID de la comparación.
+  // Utilizaremos el nombre del usuario para comparar, eliminando el UID.
   currentUserName: string = '';
 
   // Opciones de FullCalendar  
@@ -58,11 +58,13 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           } else if (badge.type === 'etiqueta') {
             className += ' etiqueta-badge';
           }
-          return `<span class="${className}" style="border-radius: 10px;">${badge.label}</span>`;
+          // Se reduce el border-radius de 10px a 5px.
+          return `<span class="${className}" style="border-radius: 5px;">${badge.label}</span>`;
         })
         .join(' ');
       const container = document.createElement('div');
       container.className = 'fc-event-custom';
+      // Se recomienda actualizar el color de las letras en la hoja CSS a un tono claro (ej. #FFFFFF).
       container.innerHTML = `
         <div class="fc-event-badges">${badgesHtml}</div>
         <div class="fc-event-title">${arg.event.title}</div>
@@ -70,15 +72,15 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       return { domNodes: [container] };
     },
     eventDidMount: (info) => {
-      // Forzar colores inline en cada badge tras renderizar el evento.
+      // Unificamos los colores de los badges utilizando la paleta establecida.
       const badgeElements = info.el.querySelectorAll('.event-badge') as NodeListOf<HTMLElement>;
       badgeElements.forEach((badge) => {
         if (badge.classList.contains('host-badge')) {
-          badge.style.backgroundColor = "#1976d2"; // Azul
+          badge.style.backgroundColor = "#2563eb"; // mainBlue
         } else if (badge.classList.contains('booked-badge')) {
-          badge.style.backgroundColor = "#FF9800"; // Naranja
+          badge.style.backgroundColor = "#DF85AFFD"; // sec_blue
         } else if (badge.classList.contains('etiqueta-badge')) {
-          badge.style.backgroundColor = "#4CAF50"; // Verde
+          badge.style.backgroundColor = "#5CC230"; // bar_colorTest2
         }
       });
     },
@@ -147,10 +149,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
             e.horaFin = new Date(e.horaFin.seconds * 1000);
           }
 
-          // Se asignan las badges usando el nombre para establecer si es Host o Booked.
+          // Se asignan las badges usando el nombre para establecer si es Organizador o Booked.
           const badges: Badge[] = [];
           if (e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()) {
-            badges.push({ type: 'host', label: 'Host' });
+            badges.push({ type: 'host', label: 'Organizador' });
           } else if (this.hasUserReservation(e)) {
             badges.push({ type: 'booked', label: 'Booked' });
           }
@@ -164,18 +166,19 @@ export class CalendarioComponent implements OnInit, OnDestroy {
         this.yourEvents = events.filter(e =>
           e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()
         );
-        // Filtrar eventos reservados: aquellos en los que el creador no coincide con el nombre del usuario y además se detecta la reserva.
+        // Filtrar eventos reservados: aquellos en los que el creador no coincide y se detecta la reserva.
         this.bookedEvents = events.filter(e =>
           e.creadorId &&
           e.creadorId.trim().toLowerCase() !== this.currentUserName.trim().toLowerCase() &&
           this.hasUserReservation(e)
         );
 
+        // Se unifican los colores de las etiquetas con la paleta establecida.
         const etiquetaColors: { [key: string]: string } = {
-          profesional: '#FF5722',
-          ocio: '#4CAF50',
-          personal: '#9C27B0',
-          academico: '#03A9F4'
+          profesional: '#2563eb',  // mainBlue
+          ocio: '#5CC230',         // bar_colorTest2
+          personal: '#FF000000',    // black
+          academico: '#DF85AFFD'     // sec_blue
         };
 
         const calendarEvents: EventInput[] = events
@@ -194,9 +197,9 @@ export class CalendarioComponent implements OnInit, OnDestroy {
               borderColor: etiquetaColor,
               extendedProps: {
                 description: e.descripcion,
-                // Se define el rol según la comparación de nombres.
+                // Se define el rol en función de la comparación del nombre.
                 role: e.creadorId && e.creadorId.trim().toLowerCase() === this.currentUserName.trim().toLowerCase()
-                  ? 'Host'
+                  ? 'Organizador'
                   : 'Booked',
                 citasReservadas: e.citasReservadas,
                 etiqueta: e.etiqueta,
@@ -229,7 +232,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Función hasUserReservation actualizada para comparar únicamente con el nombre del usuario.
+   * Función que comprueba la reserva utilizando el nombre del usuario.
    */
   hasUserReservation(event: any): boolean {
     if (!event.citasReservadas) return false;
@@ -246,7 +249,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   handleEventClick(info: any): void {
     const event = info.event;
-    if (event.extendedProps['role'] === 'Host') {
+    if (event.extendedProps['role'] === 'Organizador') {
       this.editEvent(event);
     } else {
       this.viewEvent(event);
@@ -265,7 +268,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   editEvent(event: any): void {
     const creatorId = event.extendedProps ? event.extendedProps.creadorId : event.creadorId;
-    // Comparación usando el nombre
+    // Comparación usando el nombre.
     if (!creatorId || creatorId.trim().toLowerCase() !== this.currentUserName.trim().toLowerCase()) {
       console.error('No se permite editar este evento. El creador no coincide.');
       this.viewEvent(event);
@@ -278,7 +281,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     }
     const modalRef = this.dialog.open(UpdateEventDialogComponent, {
       data: { id: eventId, readOnly: false },
-      width: '700px'
+      width: '850px'
     });
     modalRef.afterClosed().subscribe(() => {
       this.fetchEvents();
@@ -299,10 +302,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   getEtiquetaColor(etiqueta: string): string {
     const etiquetaColors: { [key: string]: string } = {
-      profesional: '#FF5722',
-      ocio: '#4CAF50',
-      personal: '#9C27B0',
-      academico: '#03A9F4'
+      profesional: '#2563eb',  // mainBlue
+      ocio: '#5CC230',         // bar_colorTest2
+      personal: '#FF000000',    // black
+      academico: '#DF85AFFD'     // sec_blue
     };
     return etiqueta ? etiquetaColors[etiqueta.toLowerCase()] || '#757575' : '#757575';
   }

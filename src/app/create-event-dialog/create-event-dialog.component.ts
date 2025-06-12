@@ -19,6 +19,7 @@ import { HttpClient } from '@angular/common/http';
 import { finalize, take } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiEndpointsService } from '../api-endpoints.service';
+import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-create-event-dialog',
@@ -32,7 +33,8 @@ import { ApiEndpointsService } from '../api-endpoints.service';
     MatSelectModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    MatIconModule
+    MatIconModule,
+    MatChipsModule,
   ],
   templateUrl: './create-event-dialog.component.html',
   styleUrls: ['./create-event-dialog.component.css']
@@ -40,6 +42,7 @@ import { ApiEndpointsService } from '../api-endpoints.service';
 export class CreateEventDialogComponent {
   eventForm: FormGroup;
   availableSlots: string[] = [];
+  selectedHoras: string[] = [];
   isLoading: boolean = false;
   
   constructor(
@@ -60,6 +63,7 @@ export class CreateEventDialogComponent {
       etiqueta: ['', Validators.required]
     }, { validators: this.checkDates });
 
+    // Actualiza los slots cada vez que cambian las horas
     this.eventForm.get('horaInicio')?.valueChanges.subscribe(() => this.updateAvailableSlots());
     this.eventForm.get('horaFin')?.valueChanges.subscribe(() => this.updateAvailableSlots());
   }
@@ -95,9 +99,28 @@ export class CreateEventDialogComponent {
         current.setMinutes(current.getMinutes() + stepMinutes);
       }
       this.availableSlots = slots;
+      // Reiniciamos la selección cada vez que se actualizan los slots
+      this.selectedHoras = [];
+      this.eventForm.get('horasDisponibles')?.setValue(this.selectedHoras);
     } else {
       this.availableSlots = [];
+      this.selectedHoras = [];
+      this.eventForm.get('horasDisponibles')?.setValue([]);
     }
+  }
+
+  /**
+   * Alterna la selección de una hora (slot) en la lista de horas disponibles.
+   */
+  toggleSelection(hora: string): void {
+    const index = this.selectedHoras.indexOf(hora);
+    if (index >= 0) {
+      this.selectedHoras.splice(index, 1);
+    } else {
+      this.selectedHoras.push(hora);
+    }
+    // Actualiza el valor en el formulario
+    this.eventForm.get('horasDisponibles')?.setValue(this.selectedHoras);
   }
 
   /**
@@ -109,14 +132,13 @@ export class CreateEventDialogComponent {
 
   /**
    * Envía el formulario y llama a la API para crear el evento, mostrando el loader hasta obtener respuesta.
-   * Se utiliza un bloqueo (isLoading) y el operador take(1) para asegurar que solo se emite y se procesa una vez la solicitud.
+   * Se utiliza un bloqueo (isLoading) y el operador take(1) para asegurar que solo se procesa una vez la solicitud.
    */
   onSubmit(): void {
-    // Si ya se está procesando la solicitud o el formulario no es válido, se evita el envío.
+    // Evita el envío si ya se está procesando o si el formulario no es válido
     if (this.isLoading || !this.eventForm.valid) { 
       return;
     }
-    
     this.isLoading = true;
     const formValue = this.eventForm.value;
 

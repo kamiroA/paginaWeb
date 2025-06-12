@@ -7,6 +7,7 @@ body {
   background-color: #f0f2f5;
 }
 
+/* Loader Screen */
 .loader-screen {
   position: fixed;
   top: 0;
@@ -21,8 +22,7 @@ body {
   z-index: 9999;
 }
 
-
-
+/* Logo animado */
 .logo-animated {
   width: 200px;
   animation: swing 2s ease-in-out infinite;
@@ -54,7 +54,7 @@ body {
   100% { background-position: 1000px 1000px; }
 }
 
-/* Sección principal */
+/* Sección principal (login) */
 .login-section {
   display: flex;
   justify-content: center;
@@ -93,11 +93,11 @@ body {
 .login-title {
   font-size: 2rem;
   margin-bottom: 25px;
-  color: #333;
+  color: #333333;
   font-weight: 600;
 }
 
-/* Inputs */
+/* Grupo de inputs */
 .input-group {
   margin-bottom: 15px;
   text-align: left;
@@ -107,15 +107,15 @@ body {
   width: 100%;
   padding: 12px;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid #A9A7A5A4;
   border-radius: 6px;
   box-sizing: border-box;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .login-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+  border-color: #2563eb;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.4);
   outline: none;
 }
 
@@ -125,7 +125,7 @@ body {
   padding: 10px 16px;
   border: none;
   border-radius: 6px;
-  color: #fff;
+  color: #ffffff;
   font-size: 0.95rem;
   cursor: pointer;
   margin-top: 10px;
@@ -135,12 +135,12 @@ body {
 }
 
 .login-button {
-  background-color: #007bff;
+  background-color: #2563eb;
 }
 
 .login-button:hover {
   transform: scale(1.03);
-  background-color: #0056b3;
+  background-color: #1f4eb3;
 }
 
 .login-button-google {
@@ -169,7 +169,7 @@ body {
 
 .forgot-password-link,
 .signup-link {
-  color: #007bff;
+  color: #2563eb;
   text-decoration: none;
   cursor: pointer;
   transition: color 0.3s;
@@ -177,7 +177,7 @@ body {
 
 .forgot-password-link:hover,
 .signup-link:hover {
-  color: #0056b3;
+  color: #1f4eb3;
 }
 
 /* Mensajes */

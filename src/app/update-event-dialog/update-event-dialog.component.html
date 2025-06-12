@@ -6,9 +6,10 @@
     <mat-icon>close</mat-icon>
   </button>
 </div>
+
 <mat-dialog-content>
   <form [formGroup]="eventForm">
-    <!-- Fila 1: ID del Evento (completo) con botón de copiar -->
+    <!-- Fila 1: ID del Evento con botón de copiar -->
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>ID del Evento</mat-label>
       <input matInput [value]="data.id" readonly>
@@ -17,7 +18,7 @@
       </button>
     </mat-form-field>
     
-    <!-- Fila 2: Nombre del Evento y Etiqueta (dos columnas) -->
+    <!-- Fila 2: Nombre del Evento y Etiqueta -->
     <div class="two-column-grid">
       <mat-form-field appearance="fill">
         <mat-label>Nombre del Evento</mat-label>
@@ -40,7 +41,7 @@
       </mat-form-field>
     </div>
     
-    <!-- Fila 3: Descripción (100% ancho) -->
+    <!-- Fila 3: Descripción -->
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Descripción</mat-label>
       <textarea matInput formControlName="descripcion"></textarea>
@@ -49,7 +50,7 @@
       </mat-error>
     </mat-form-field>
     
-    <!-- Fila 4: Hora de Inicio y Hora de Fin (dos columnas) -->
+    <!-- Fila 4: Hora de Inicio y Hora de Fin -->
     <div class="two-column-grid">
       <mat-form-field appearance="fill">
         <mat-label>Hora de Inicio</mat-label>
@@ -72,46 +73,41 @@
       </mat-form-field>
     </div>
     
-    <!-- Fila 5: Horas Disponibles (solo en modo edición y si existen) -->
-    <mat-form-field
-      *ngIf="!data.readOnly && availableSlots.length > 0"
-      appearance="fill"
-      class="full-width"
-    >
-      <mat-label>Horas Disponibles</mat-label>
-      <mat-select formControlName="horasDisponibles" multiple>
-        <mat-option *ngFor="let slot of availableSlots" [value]="slot">
+    <!-- Fila 5: Horas Disponibles (Chip List para selección múltiple) -->
+    <div *ngIf="!data.readOnly && availableSlots.length > 0" class="selection-panel">
+      <h3>Horas Disponibles</h3>
+      <mat-chip-listbox multiple>
+        <mat-chip-option 
+          *ngFor="let slot of availableSlots" 
+          (click)="toggleSelection(slot)"
+          [selected]="selectedHoras.includes(slot)">
           {{ slot | date:'shortTime' }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+        </mat-chip-option>
+      </mat-chip-listbox>
+    </div>
     
-    <!-- Fila 6: Reserva (modo solo lectura) -->
-    <mat-form-field
-      *ngIf="data.readOnly"
-      appearance="fill"
-      class="full-width"
-    >
-      <mat-label>Tu Reserva</mat-label>
-      <input matInput [value]="reservaDisplay" readonly>
-    </mat-form-field>
+    <!-- Fila 6: Reserva (solo lectura) -->
+    <div *ngIf="data.readOnly" class="reserve-container">
+      <h3 class="reserve-title">Tu Reserva</h3>
+      <p class="reserva-display">{{ reservaDisplay }}</p>
+    </div>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <ng-container *ngIf="data.readOnly">
-    <button mat-button (click)="onClose()">Cerrar</button>
+    <button mat-button class="global-edit-btn" (click)="onClose()">Cerrar</button>
   </ng-container>
   <ng-container *ngIf="!data.readOnly">
     <ng-container *ngIf="!editMode">
-      <button mat-button (click)="onEnableEdit()">Modificar</button>
-      <button mat-button color="warn" (click)="onDelete()">Eliminar</button>
-      <button mat-button (click)="onClose()">Cerrar</button>
+      <button mat-button class="global-edit-btn" (click)="onEnableEdit()">Modificar</button>
+      <button mat-button class="global-cancel-btn" (click)="onDelete()">Eliminar</button>
+      <button mat-button class="global-edit-btn" (click)="onClose()">Cerrar</button>
     </ng-container>
     <ng-container *ngIf="editMode">
-      <button mat-button (click)="onCancelEdit()">Cancelar Edición</button>
-      <button mat-button color="warn" (click)="onDelete()">Eliminar</button>
-      <button mat-button color="primary" (click)="onSubmit()">Actualizar</button>
+      <button mat-button class="global-cancel-btn" (click)="onCancelEdit()">Cancelar Edición</button>
+      <button mat-button class="global-cancel-btn" (click)="onDelete()">Eliminar</button>
+      <button mat-button class="global-save-btn" (click)="onSubmit()">Actualizar</button>
     </ng-container>
   </ng-container>
 </mat-dialog-actions>

@@ -1,123 +1,247 @@
-
-.edit-profile-container {
-  display: flex;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 1000px;
-  margin: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-family: Arial, sans-serif;
+/* ============================= */
+/*      Tarjeta de Perfil        */
+/* ============================= */
+.edit-profile-card {
+  max-width: 1200px;
+  width: 100%;
+  margin: 40px auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  font-family: 'Roboto', sans-serif;
+  overflow: hidden;
+  background: #FFFFFF;
+  transition: all 0.3s ease;
 }
 
+/* ============================= */
+/*  Contenedor Principal         */
+/* ============================= */
+.edit-profile-container {
+  display: flex;
+  flex-direction: row;
+  padding: 40px;
+  gap: 40px;
+  background: #FBF7F7;
+}
+
+/* ============================= */
+/*          Panel Izquierdo      */
+/* ============================= */
 .left-panel {
-  width: 35%;
+  flex: 1;
+  max-width: 40%;
   text-align: center;
-  padding-right: 20px;
-  border-right: 1px solid #ddd;
+  padding-right: 30px;
+  border-right: 1px solid #A9A7A5A4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-pic-wrapper {
   position: relative;
   display: inline-block;
+  margin-bottom: 20px;
 }
 
 .profile-pic {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   object-fit: cover;
+  border: 3px solid #2563eb;
 }
 
 .edit-icon {
   position: absolute;
   bottom: 0;
   right: 0;
-  background: #007bff;
-  color: white;
+  background: #2563eb;
+  color: #FFFFFF;
   border-radius: 50%;
-  padding: 5px;
+  padding: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 18px;
+  border: 2px solid #FFFFFF;
+  transition: filter 0.3s ease;
 }
 
-.user-info {
-  margin-top: 15px;
-  text-align: left;
-  padding: 0 10px;
+.edit-icon:hover {
+  filter: brightness(90%);
 }
 
+.user-name {
+  font-size: 1.8rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #000000;
+}
+
+.user-info p {
+  margin: 4px 0;
+  font-size: 1rem;
+  color: #555555;
+}
+
+/* ============================= */
+/*          Panel Derecho        */
+/* ============================= */
 .right-panel {
-  width: 65%;
-  padding-left: 20px;
+  flex: 1.4;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+  padding-left: 30px;
 }
 
 .editable-field {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.editable-field label {
+  width: 140px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #000000;
 }
 
 .editable-field input,
 .editable-field textarea {
   flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #A9A7A5A4;
+  border-radius: 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.editable-field input:focus,
+.editable-field textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
 }
 
 .editable-field textarea {
   resize: vertical;
-  height: 60px;
+  min-height: 80px;
 }
 
-.editable-field button {
-  padding: 6px 10px;
-  font-size: 14px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.change-password-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 20px;
-  cursor: pointer;
-  max-width: 200px;
-
-}
+/* ============================= */
+/*  Sección Cambio de Contraseña */
+/* ============================= */
 .change-password-section {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.change-password-toggle {
-  margin-top: 10px;
-  margin-left: 60px;
-
-}
-
-.change-password-toggle a {
-  color: #007bff;
-  cursor: pointer;
-  text-decoration: underline;
+  gap: 15px;
 }
 
 .password-fields {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
+}
+
+/* ============================= */
+/*    Controles Globales         */
+/* ============================= */
+.global-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  gap: 20px;
+}
+
+.global-edit-btn,
+.global-save-btn,
+.global-cancel-btn {
+  border: none;
+  border-radius: 30px;
+  padding: 10px 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #FFFFFF !important;
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.global-edit-btn {
+  background-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+}
+
+.global-edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4) !important;
+}
+
+.global-save-btn {
+  background-color: #5CC230 !important;
+  box-shadow: 0 4px 12px rgba(92, 194, 48, 0.3) !important;
+}
+
+.global-save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(92, 194, 48, 0.4) !important;
+}
+
+.global-cancel-btn {
+  background-color: #f44336 !important;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3) !important;
+}
+
+.global-cancel-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4) !important;
+}
+
+/* ============================= */
+/*   Contenedor de Acciones Global*/
+/* ============================= */
+.global-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  gap: 20px;
+}
+
+/* ============================= */
+/*        Responsividad          */
+/* ============================= */
+@media (max-width: 768px) {
+  .edit-profile-card {
+    margin: 20px;
+  }
+  .edit-profile-container {
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+  }
+  .left-panel {
+    border-right: none;
+    border-bottom: 1px solid #A9A7A5A4;
+    padding-right: 0;
+    padding-bottom: 20px;
+  }
+  .right-panel {
+    padding-left: 0;
+  }
+  .editable-field label {
+    width: 100px;
+  }
+}
+
+/* ============================= */
+/*      Ajustes Extra Diálogos    */
+/* ============================= */
+.custom-edit-profile-dialog .mat-dialog-container {
+  padding: 0;
+  background: none;
+  box-shadow: none;
 }

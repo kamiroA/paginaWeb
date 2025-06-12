@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-update-event-dialog',
@@ -31,7 +32,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatChipsModule
   ],
   templateUrl: './update-event-dialog.component.html',
   styleUrls: ['./update-event-dialog.component.css']
@@ -39,6 +41,7 @@ import { MatIconModule } from '@angular/material/icon';
 export class UpdateEventDialogComponent implements OnInit {
   eventForm: FormGroup;
   availableSlots: string[] = [];
+  selectedHoras: string[] = [];
   editMode: boolean = false;
 
   constructor(
@@ -50,7 +53,6 @@ export class UpdateEventDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private snackBar: MatSnackBar
   ) {
-    // Se agregó el control "reserva" para usarlo en el template (por ej. en un getter reservaDisplay).
     this.eventForm = this.fb.group(
       {
         id: [{ value: '', disabled: true }],
@@ -76,10 +78,6 @@ export class UpdateEventDialogComponent implements OnInit {
     }
   }
 
-  /**
-   * Convierte un valor de fecha (Firestore Timestamp o string) al formato "yyyy-MM-ddTHH:mm"
-   * usado en inputs 'datetime-local'
-   */
   private formatDateForInput(dateValue: any): string {
     let date: Date;
     if (typeof dateValue === 'object' && dateValue.seconds) {
@@ -91,9 +89,6 @@ export class UpdateEventDialogComponent implements OnInit {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
-  /**
-   * Valida que horaInicio sea menor que horaFin.
-   */
   checkDates(group: AbstractControl): ValidationErrors | null {
     const inicio = group.get('horaInicio')?.value;
     const fin = group.get('horaFin')?.value;
@@ -103,9 +98,6 @@ export class UpdateEventDialogComponent implements OnInit {
     return null;
   }
 
-  /**
-   * Calcula los intervalos (slots) de 30 minutos entre horaInicio y horaFin.
-   */
   updateAvailableSlots(): void {
     const inicio = this.eventForm.get('horaInicio')?.value;
     const fin = this.eventForm.get('horaFin')?.value;
@@ -124,28 +116,17 @@ export class UpdateEventDialogComponent implements OnInit {
     }
   }
 
-  /**
-   * Procesa la reserva del usuario a partir del mapa 'citasReservadas'.
-   * Se asume que 'citasReservadas' es un objeto en el que las claves son
-   * fechas (en string) y los valores son el identificador del usuario (nombre o correo).
-   * Esta función formatea cada entrada para mostrar la hora de la reserva seguida del identificador.
-   */
   getUserReservation(citasReservadas: any): string | null {
     const keys = Object.keys(citasReservadas);
     if (keys.length === 0) return null;
-    
     const reservations = keys.map(key => {
       const timeFormatted = new Date(key).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const identifier = citasReservadas[key]?.toString().trim();
       return `${timeFormatted} - ${identifier}`;
     });
-    return reservations.join(', ');
+    return reservations.join('\n');
   }
 
-  /**
-   * Se suscribe al documento del evento en Firestore para obtener los datos actuales.
-   * Se intenta extraer el valor para 'reserva' ya sea directamente o a partir de 'citasReservadas'
-   */
   getEventById(): void {
     const eventDocRef = doc(this.firestore, 'eventos', this.data.id);
     docData(eventDocRef, { idField: 'id' }).subscribe(
@@ -159,7 +140,6 @@ export class UpdateEventDialogComponent implements OnInit {
           horasDisponibles: data.horasDisponibles || [],
           etiqueta: data.etiqueta || '',
           creadorId: data.creadorId || '',
-          // Si existe 'reserva' se usa, de lo contrario se intenta extraerla de 'citasReservadas'
           reserva: data.reserva ? data.reserva : (data.citasReservadas ? this.getUserReservation(data.citasReservadas) : null)
         };
         this.eventForm.patchValue(fetchedData);
@@ -181,10 +161,6 @@ export class UpdateEventDialogComponent implements OnInit {
     this.eventForm.disable();
   }
 
-  /**
-   * Al enviar el formulario, convierte horaInicio y horaFin de string a objetos Date para actualizar Firestore.
-   * Además, elimina la propiedad "id" del objeto de actualización.
-   */
   onSubmit(): void {
     if (this.eventForm.valid) {
       const formValue = this.eventForm.getRawValue();
@@ -217,9 +193,6 @@ export class UpdateEventDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  /**
-   * Copia el ID del evento al portapapeles.
-   */
   copyId(id: string): void {
     navigator.clipboard.writeText(id)
       .then(() => {
@@ -231,9 +204,6 @@ export class UpdateEventDialogComponent implements OnInit {
       });
   }
 
-  /**
-   * Getter para mostrar la reserva de forma formateada en el template.
-   */
   get reservaDisplay(): string {
     const reserva = this.eventForm.get('reserva')?.value;
     if (reserva instanceof Date) {
@@ -242,5 +212,15 @@ export class UpdateEventDialogComponent implements OnInit {
       return reserva;
     }
     return 'Sin reserva';
+  }
+
+  toggleSelection(slot: string): void {
+    const idx = this.selectedHoras.indexOf(slot);
+    if (idx >= 0) {
+      this.selectedHoras.splice(idx, 1);
+    } else {
+      this.selectedHoras.push(slot);
+    }
+    this.eventForm.get('horasDisponibles')?.setValue(this.selectedHoras);
   }
 }

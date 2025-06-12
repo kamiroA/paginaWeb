@@ -2,8 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClient } from '@angular/common/http';
 import { ApiEndpointsService } from '../api-endpoints.service';
@@ -11,8 +10,8 @@ import { forkJoin } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 export interface JoinEventData {
-  event: any;            // El evento debe incluir: id, codigo, descripcion, horaInicio, horaFin, horasDisponibles, citasReservadas, etc.
-  currentUser?: string;  // Nombre del usuario logueado, por ejemplo "Camilo"
+  event: any;            // El evento debe incluir: id, codigo, etc.
+  currentUser?: string;  // Nombre del usuario logueado.
 }
 
 @Component({
@@ -22,19 +21,17 @@ export interface JoinEventData {
     CommonModule,
     MatDialogModule,
     MatFormFieldModule,
-    MatSelectModule,
-    ReactiveFormsModule,
+    MatChipsModule,
     MatButtonModule
+    
   ],
   templateUrl: './join-event-dialog.component.html',
   styleUrls: ['./join-event-dialog.component.css']
 })
 export class JoinEventDialogComponent implements OnInit {
-  // Control de selección múltiple, aunque se espere una sola hora
-  horaControl = new FormControl<(string | null)[]>([], Validators.required);
   availableHours: string[] = [];
-  // Se asume que en Firestore, citasReservadas es un mapa: clave = hora elegida, valor = nombre
   reservedAppointments: { hora: string, reservadoPor: string }[] = [];
+  selectedHoras: string[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<JoinEventDialogComponent>,
@@ -47,14 +44,10 @@ export class JoinEventDialogComponent implements OnInit {
   ngOnInit(): void {
     let reservedHours: string[] = [];
     if (this.data.event.citasReservadas) {
-      // Convertir el mapa en un array de objetos { hora, reservadoPor }
       this.reservedAppointments = Object.entries(this.data.event.citasReservadas)
-        .map(([hora, valor]) => {
-          return { hora, reservadoPor: (valor as string) || 'Sin nombre' };
-        });
+        .map(([hora, valor]) => ({ hora, reservadoPor: (valor as string) || 'Sin nombre' }));
       reservedHours = Object.keys(this.data.event.citasReservadas);
     }
-    // Calcular las horas disponibles excluyendo las reservas existentes
     this.availableHours = this.data.event.horasDisponibles.filter((hora: string) => {
       return !reservedHours.includes(hora);
     });
@@ -64,57 +57,63 @@ export class JoinEventDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  joinEvent(): void {
-    let selectedHoras = this.horaControl.value;
-    // Asegurar que selectedHoras sea siempre un arreglo
-    if (!Array.isArray(selectedHoras)) {
-      selectedHoras = [selectedHoras];
+  toggleSelection(hora: string): void {
+    const index = this.selectedHoras.indexOf(hora);
+    if (index >= 0) {
+      this.selectedHoras.splice(index, 1);
+    } else {
+      this.selectedHoras.push(hora);
     }
-    if (!selectedHoras || !selectedHoras.length) {
-      this.snackBar.open("Por favor selecciona al menos una hora.", "Cerrar", { duration: 3000 });
-      return;
-    }
-    // Enviar una petición PATCH por cada hora seleccionada
-    const requests = selectedHoras.map((hora: string | null) => {
-      if (!hora) {
-        throw new Error('Hora seleccionada es null o indefinida');
-      }
-      const eventId = this.data.event.id; // Se asume que el objeto evento tiene la propiedad 'id'
-      if (!eventId) {
-        throw new Error('ID del evento no definido');
-      }
-      const url = this.endpoints.reservarCitaEndpoint(eventId);
-      const payload = {
-        [hora]: this.data.currentUser || 'Sin nombre'
-      };
-      return this.http.patch(url, payload, { responseType: 'text' });
-    });
-
-    forkJoin(requests).subscribe({
-      next: () => {
-        const eventId = this.data.event.id;
-        if (!eventId) {
-          this.snackBar.open("No se encontró el ID del evento.", "Cerrar", { duration: 3000 });
-          return;
-        }
-        const getUrl = this.endpoints.getEventoByIdEndpoint(eventId);
-        this.http.get<any>(getUrl).subscribe({
-          next: updatedEvent => {
-            this.data.event = updatedEvent;
-            // Recalcula las reservas y horas disponibles
-            this.ngOnInit();
-            this.snackBar.open('Te has unido al evento exitosamente.', "Cerrar", { duration: 3000 });
-            this.dialogRef.close(true);
-          },
-          error: err => {
-            this.snackBar.open('Error al actualizar la información del evento: ' + err.message, "Cerrar", { duration: 3000 });
-            this.dialogRef.close(true);
-          }
-        });
-      },
-      error: (err) => {
-        this.snackBar.open('Error al unirse al evento: ' + err.message, "Cerrar", { duration: 3000 });
-      }
-    });
   }
+
+  joinEvent(): void {
+  if (!this.selectedHoras || this.selectedHoras.length === 0) {
+    this.snackBar.open("Por favor selecciona al menos una hora.", "Cerrar", { duration: 3000 });
+    return;
+  }
+
+  // Obtenemos las reservas existentes si las hay; de lo contrario, un objeto vacío.
+  const reservasExistentes: { [key: string]: string } = this.data.event.citasReservadas || {};
+
+  // Creamos un nuevo objeto combinando las reservas existentes con las nuevas.
+  const nuevasReservas: { [key: string]: string } = { ...reservasExistentes };
+
+  this.selectedHoras.forEach((hora: string) => {
+    nuevasReservas[hora] = this.data.currentUser || 'Sin nombre';
+  });
+
+  // Obtenemos el ID del evento y preparamos la URL del endpoint
+  const eventId = this.data.event.id;
+  if (!eventId) {
+    this.snackBar.open("ID del evento no definido.", "Cerrar", { duration: 3000 });
+    return;
+  }
+  const url = this.endpoints.reservarCitaEndpoint(eventId);
+
+  // Enviamos una única petición PATCH con el objeto de reservas combinado
+  this.http.patch(url, nuevasReservas, { responseType: 'text' }).subscribe({
+    next: (response: string) => {
+      console.log('Respuesta del PATCH:', response);
+      // Una vez actualizado, obtenemos nuevamente el evento para actualizar la vista local.
+      const getUrl = this.endpoints.getEventoByIdEndpoint(eventId);
+      this.http.get<any>(getUrl).subscribe({
+        next: updatedEvent => {
+          console.log('Evento actualizado recibido:', updatedEvent);
+          this.data.event = updatedEvent;
+          this.ngOnInit();
+          this.snackBar.open('Te has unido al evento exitosamente.', "Cerrar", { duration: 3000 });
+          this.dialogRef.close(true);
+        },
+        error: err => {
+          this.snackBar.open('Error al refrescar el evento: ' + err.message, "Cerrar", { duration: 3000 });
+          this.dialogRef.close(true);
+        }
+      });
+    },
+    error: (err) => {
+      this.snackBar.open('Error al actualizar la reserva: ' + err.message, "Cerrar", { duration: 3000 });
+    }
+  });
+}
+
 }
